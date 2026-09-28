@@ -1,0 +1,29 @@
+# Dependencies and build output
+node_modules/
+dist/
+.vite/
+coverage/
+
+# Environment files (secrets never committed; see docs/SETUP_INFRA.md)
+.env
+.env.*
+!.env.example
+
+# Supabase CLI local state
+supabase/.branches/
+supabase/.temp/
+
+# Sensitive business data: never in git (DECISIONS A-016, D-009)
+private/
+backups/
+*.xlsx
+*.xls
+/*.csv
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.log
