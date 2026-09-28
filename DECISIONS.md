@@ -44,7 +44,7 @@ Every decision, assumption and change made during the build goes here. Read this
 **D-009 (Q-05): Backups and plans.** The weekly backup goes to a restricted Google Drive folder, accessible to the Owner and Accountant only, **never a Git repo**. Production runs on Supabase **Pro** (no pausing, daily backups); staging runs on the **free** plan (can pause when idle).
 
 #### Contradictions resolved
-**D-010 (Q-06): Payments to the Owner.** The Owner approves payments to himself. Each such approval is audit-logged and flagged. **Both Directors are notified**, and the **Accountant must review** the payment (it counts as unreviewed for month close until reviewed). **Directors remain strictly read-only**, with no approve permission of any kind.
+**D-010 (Q-06): Payments to the Owner.** The Owner approves payments made to the Owner. Each such approval is audit-logged and flagged. **Both Directors are notified**, and the **Accountant must review** the payment (it counts as unreviewed for month close until reviewed). **Directors remain strictly read-only**, with no approve permission of any kind.
 
 **D-011 (Q-07): Minimal suppliers and staff loans in Phase A.**
 - Suppliers: name, type, TIN, WHT category (plus active flag and notes). Full supplier fields and the subcontractor features stay in Phase B.
@@ -63,7 +63,7 @@ Every decision, assumption and change made during the build goes here. Read this
 **D-015 (Q-11): Francis's team** = technical staff only: Ernest Gbadago, Ibrahim Commedan, Nana Poku, NSP1 and NSP2.
 - Admin (NSP3) reports to the Owner.
 - The team is stored as an explicit `approver` on each staff record, not inferred:
-  - Francis approves his team.
+  - Francis approves the technical team.
   - The Owner approves Francis and NSP3.
   - The Owner's own entries are auto-approved.
 - The late-entry tiers follow the approver: for anyone whose approver is the Owner, only the Owner can enter their time from day 4.
@@ -136,7 +136,7 @@ It is modelled as Tier 3 (employee and employer), with a dated rate setting defa
 
 **A-010: Phase B/C items on Phase A home screens show "—" or zero** until their phase ships. "Reserved provisions" = 0 and the prepayment share of running cost = 0 until Phase C.
 
-**A-011: Review scope.** Every money entry made by anyone other than the Accountant needs Accountant review before month close. The Accountant's own entries are treated as reviewed. (D-010 adds the Owner's payments to himself explicitly.)
+**A-011: Review scope.** Every money entry made by anyone other than the Accountant needs Accountant review before month close. The Accountant's own entries are treated as reviewed. (D-010 adds payments to the Owner explicitly.)
 
 **A-012: Payroll net pay posts as money out when the run is marked paid** (date paid + account), not at the moment of approval. Statutory lines are created at approval.
 
