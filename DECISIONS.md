@@ -13,10 +13,10 @@ Every decision, assumption and change made during the build goes here. Read this
 
 | Item | State |
 |---|---|
-| Current phase | **Phase A: data model.** Plan confirmed by the Owner, 28 Sep 2026. |
+| Current phase | **Phase A: data model and RLS written and tested locally** (29 Sep 2026): 10 migrations in `supabase/migrations`, 229 SQL checks passing in `supabase/tests` (see `docs/DATA_MODEL.md`). Next: apply to staging, then forms and CSV import. |
 | Brief | PROJECT_BRIEF.md = `MeLiNS_Command_Centre_Build_Prompt_v2.txt`, revision 2.4 (28 Sep 2026), copied unchanged |
 | Repository | https://github.com/akdadzie/melins-command-centre (private); local folder `C:\dev\melins-ims` |
-| Waiting on Owner | Infrastructure values and SMTP/DNS setup (`docs/SETUP_INFRA.md`); statement samples; user email list |
+| Waiting on Owner | Staging project ref and a CLI link to staging (`docs/SETUP_INFRA.md` §2) so the migrations can be applied; SMTP/DNS setup; statement samples; user email list |
 
 ---
 
@@ -148,6 +148,75 @@ It is modelled as Tier 3 (employee and employer), with a dated rate setting defa
 
 **A-016: Sensitive files never go in git.** `*.xlsx`, `*.xls`, `*.csv` at the repo root, and everything under `private/` are git-ignored. The payroll workbook stays local. Statement samples go in `private/`.
 
+### Data model assumptions (29 Sep 2026)
+These came up while building the schema. Each is easy to change if the Owner or Accountant prefers otherwise.
+
+**A-017: Rates.** Cost rate = monthly cost × (1 + overhead share) ÷ billable hours per month. Charge-out rate = cost rate × (1 + target margin). The cost rate therefore includes the overhead share, so job margins are after overheads. Both are frozen on each timesheet entry when it's approved.
+
+**A-018: Seeded staff.** Start dates are set to 1 Sep 2026 (the cost-history date). The Owner corrects them in the setup wizard, because they drive payroll checks, utilisation and leave pro-rating. Emails are filled in when users are invited.
+
+**A-019: What Admin sees.** Admin sees amounts on individual invoices (net, gross, outstanding) and on individual supplier bills, because it needs them to draft and chase. Admin never gets a balance or total:
+- No view or function returns totals to Admin.
+- The API's aggregate functions stay off (the Supabase default). **They must not be switched on.**
+
+**A-020: Reported vs confirmed payments.**
+- An invoice's Part-paid / Paid status and its outstanding amount count both Reported and Confirmed payments, so Admin doesn't chase money a client has already paid.
+- Only Confirmed payments count as cash, in weeks of cover and in "received this month" (brief §7.4).
+- A Rejected payment drops out of everything.
+- An allocation can't exceed the payment or what the invoice still has due.
+
+**A-021: Confirming a client payment is its review.** Receipts go Reported → Confirmed by the Accountant. They don't also go through Recorded → Reviewed.
+
+**A-022: Holidays and leave in timesheets.**
+- Public holidays are non-working days in the calendar, not rows of timesheet entries. They don't count toward the entry window, reminders, compliance or utilisation targets.
+- Approved leave creates Leave entries at 0 hours. Cancelling the leave before it starts removes them.
+- A weekend day's window counts from the next working day (A-013).
+
+**A-023: Retention.**
+- Retention is calculated on fee, milestone and "other" lines only, not on rechargeable expenses or retention releases.
+- A retention-release line carries no tax, because the tax was charged on the original invoice.
+- A release can't exceed the retention the job still holds.
+- Each invoice keeps a snapshot of the job's retention % and basis, so later changes to the job don't alter issued invoices.
+
+**A-024: Imported opening receivables.**
+- They keep their number and status (D-021) and may be imported with totals only, without lines.
+- They're excluded from the VAT workings and from "fees invoiced this month", because that output VAT was declared before the system existed.
+
+**A-025: Expenses and supplier bills.**
+- An expense is entered at the amount paid, VAT included. With a tax code, the net and each tax component are split out.
+- Input VAT is claimable only for recoverable components, and only with a valid VAT invoice.
+- A supplier bill is an expense with payment source "supplier payable", settled through Payments out.
+- A payment can't exceed what's still owed on its bills. WHT is taken at the supplier category's rate in force.
+
+**A-026: How Directors are stopped.**
+- A Director's API edit or delete changes zero rows, because RLS hides rows from writes.
+- A Director's insert, or any Director write that reaches a table, fails with "Directors have read-only access". A trigger on every table enforces this, even if a policy is written wrongly later.
+- Either way nothing changes (acceptance 22), and the UI hides action buttons.
+
+**A-027: Payroll detail.**
+- Tier 1 and Tier 2 split the SSNIT actually contributed (employee plus employer) in the ratio 13.5 : 5, so national service persons (no SSNIT) have nil tiers.
+- Bonus PAYE is imported as its own column. The net check subtracts it.
+- The sheet's 0.01 rounding is absorbed by the line tolerance (0.01) and the total tolerance (0.05), both in Settings.
+- Cost updates proposed from a run use the full cost to company (Q-23 recommendation). The Owner confirms them before they're added to the cost history.
+
+**A-028: One approval flow for all money out.** It covers supplier payments, staff reimbursements, staff loans, payments to directors and statutory payments.
+- After approval, only the payment details (date, account, method, reference) can change.
+- "Send back to Prepared" withdraws the approval.
+- Once Paid, a payment is locked apart from its review fields and attachments.
+- Cash leaves the ledger only when the payment is marked Paid.
+
+**A-029: Views run with owner rights.** Views don't use `security_invoker`; each checks the role itself. That's how they hide columns (for example `account_picker`, `my_jobs`, `leave_calendar`, `receipt_tasks`). The Supabase linter will flag these as "security definer views". That's expected.
+
+**A-030: What blocks month close.**
+- Money entries that are unreviewed or queried.
+- Reported payments not yet confirmed.
+- Recurring drafts not yet confirmed.
+- Unmatched statement lines.
+- Accounts not reconciled.
+- Payments approved but not yet paid.
+
+The Accountant (or the Owner) closes the month. Only the Owner reopens it, with a logged reason.
+
 ---
 
 ## Findings from the payroll workbook (28 Sep 2026)
@@ -166,4 +235,8 @@ It is modelled as Tier 3 (employee and employer), with a dated rate setting defa
 
 ## Open questions
 
-**Q-23 (non-blocking): Cost to company.** Should staff cost history and job costing use the full figure (Gross + employer SSNIT + employer PF + post-tax allowances), or the sheet's Gross + Employer SSF? Recommended: the full figure, with a warning when it differs from the sheet. Both are identical today, and the schema stores every component either way.
+**Q-23 (non-blocking): Cost to company.** *Built with the recommendation (A-027); both figures are stored.* Should staff cost history and job costing use the full figure (Gross + employer SSNIT + employer PF + post-tax allowances), or the sheet's Gross + Employer SSF? Recommended: the full figure, with a warning when it differs from the sheet. Both are identical today, and the schema stores every component either way.
+
+**Q-24 (non-blocking): December bonus columns.** The May workbook has no bonus columns. When the Accountant prepares the December sheet, confirm the column mapping for the 13th-month bonus and bonus PAYE. The schema already has both fields.
+
+**Q-25 (non-blocking): Confirming payments when the Accountant is away.** The brief lets only the Accountant confirm client payments, against the statement. Should the Owner also be able to confirm in an emergency? The current build says no.
