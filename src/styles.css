@@ -185,3 +185,6 @@ table.lines th { background: #f3f3f3; }
 .payout-bar .steps { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
 .payout-bar .actions { display: flex; gap: .5rem; flex-wrap: wrap; }
 tr.row-bad td { background: #fff5f6; }
+ul.checks { margin: .25rem 0; padding-left: 1.2rem; }
+ul.checks li.bad { color: var(--red-dark); }
+tr.total-row td { font-weight: 700; border-top: 2px solid var(--text); background: var(--panel); }
