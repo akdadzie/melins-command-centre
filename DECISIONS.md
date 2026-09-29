@@ -13,10 +13,10 @@ Every decision, assumption and change made during the build goes here. Read this
 
 | Item | State |
 |---|---|
-| Current phase | **Phase A: data model and RLS written and tested locally** (29 Sep 2026): 10 migrations in `supabase/migrations`, 229 SQL checks passing in `supabase/tests` (see `docs/DATA_MODEL.md`). Next: apply to staging, then forms and CSV import. |
+| Current phase | **Phase A: forms and CSV import** (29 Sep 2026). Migrations 0100-1000 are applied to staging and verified; 1100 (user provisioning) is waiting to be pushed. The front end has sign-in with 2FA, guarded routes, forms and CSV import/export for the reference and go-live data, and the Users screen. Next: invoices, receipts and payments screens, the payroll import, timesheets, then the home screens. |
 | Brief | PROJECT_BRIEF.md = `MeLiNS_Command_Centre_Build_Prompt_v2.txt`, revision 2.4 (28 Sep 2026), copied unchanged |
 | Repository | https://github.com/akdadzie/melins-command-centre (private); local folder `C:\dev\melins-ims` |
-| Waiting on Owner | Staging project ref and a CLI link to staging (`docs/SETUP_INFRA.md` §2) so the migrations can be applied; SMTP/DNS setup; statement samples; user email list |
+| Waiting on Owner | Push migration 1100 and deploy `invite-user` (`docs/SETUP_INFRA.md` §9); bootstrap the Owner account on staging; add the staging anon key to `.env.local`; SMTP/DNS setup; statement samples; user email list |
 
 ---
 
@@ -216,6 +216,30 @@ These came up while building the schema. Each is easy to change if the Owner or 
 - Payments approved but not yet paid.
 
 The Accountant (or the Owner) closes the month. Only the Owner reopens it, with a logged reason.
+
+### Front end (29 Sep 2026)
+
+**A-031: One definition per table drives the screen.** Each table has a definition in `src/resources/definitions.ts` covering its fields, who can create, edit and import, and any import defaults. That single definition generates:
+- the form
+- the list
+- the CSV template, import and export
+
+Forms and CSV import share one parser (`coerce.ts`), so any row that imports is exactly a row the form would accept. A unit test checks every field against the generated database types and every dropdown value against the migrations. Screens with lines, allocations or approvals (invoices, receipts, payments out, payroll, timesheets) get their own screens next.
+
+**A-032: CSV rules.**
+- Dates are day-first: DD/MM/YYYY, YYYY-MM-DD or 28 Sep 2026. US month-first dates are rejected, never guessed.
+- Money may carry "GHS" and thousands separators, and "(250.00)" means minus 250.
+- Linked records (client, job, account…) are matched by their exact name, ignoring case. A job also matches on its number alone. No match, or more than one, is an error on that line.
+- Every row is checked before anything is saved. Valid rows are then saved one at a time, so a row the database rejects is reported with its line number while the rest still import.
+- Exports write names rather than ids, so an export can be edited and re-imported.
+- Imports use the importing person's own permissions (RLS), exactly like the forms.
+
+**A-033: How users are created.**
+- The Owner invites people from Settings > Users. The `invite-user` Edge Function checks that the caller is the Owner at `aal2`, then invites through the Auth admin API with the role and the staff or director link.
+- A database trigger creates the profile from that invite. An invite without a role creates no profile ("No access yet").
+- The first Owner is created once per environment with `select app.bootstrap_owner('<email>')` in the Supabase SQL editor. It refuses if an Owner already exists.
+
+**A-034: Stack details.** React Router 7 and TanStack Query, with plain CSS in MeLiNS red. Mobile-first: forms and dialogs go full-screen on phones. If a build has no Supabase settings, the app shows a clear "not configured" screen instead of failing silently.
 
 ---
 

@@ -98,3 +98,19 @@ Netlify → **Site configuration → Build & deploy → Continuous deployment �
 
 ## 8. Google Drive backup folder (needed later, for the backup task)
 Create a folder such as **"MeLiNS Command Centre – Backups"**, shared only with you and the Accountant. I'll give the service-account steps when the backup job is built (DECISIONS A-015).
+
+## 9. First sign-in on staging (and later production)
+Do these once per environment, in this order:
+1. **Apply the latest migrations.** In `C:\dev\melins-ims`, run `npx supabase db push` (while linked to staging).
+2. **Deploy the invite function.** Run `npx supabase functions deploy invite-user`. Supabase gives it the service-role key automatically, and nothing is stored in the repo.
+3. **Invite yourself.** Supabase dashboard → **Authentication → Users → Invite user**, with your email.
+4. **Make that log-in the Owner.** Supabase dashboard → **SQL Editor** → run:
+   ```sql
+   select app.bootstrap_owner('<your email>');
+   ```
+5. **Accept the invite.** Open the invite email and choose a password. The app then asks you to set up an authenticator app (2FA).
+6. **Invite everyone else.** Use **Settings → Users** in the app. Each person is linked to their staff or director record.
+
+To run the app on this PC against staging:
+1. Put the staging **anon / publishable key** in `.env.local` next to `VITE_SUPABASE_URL=https://cipklttzbvbsivzrkcvq.supabase.co`.
+2. Run `npm run dev` and open http://localhost:5173.
