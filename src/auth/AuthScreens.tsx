@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from './AuthProvider'
+import { signInErrorMessage } from './authErrors'
 
 function Card({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -31,14 +32,16 @@ export function LoginPage() {
     setBusy(true); setError(null)
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
     setBusy(false)
-    if (error) setError('That email and password don\'t match.')
+    setError(signInErrorMessage(error))
   }
 
   async function forgot() {
     if (!email.trim()) { setError('Enter your email first.'); return }
     setBusy(true); setError(null)
-    await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: window.location.origin + '/me' })
-    setBusy(false); setResetSent(true)
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: window.location.origin + '/me' })
+    setBusy(false)
+    if (error) setError(signInErrorMessage(error))
+    else setResetSent(true)
   }
 
   return (

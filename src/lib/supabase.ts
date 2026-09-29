@@ -1,16 +1,17 @@
 import { createClient } from '@supabase/supabase-js'
+import { checkSupabaseUrl, configProblem } from './config'
 import type { Database } from './database.types'
 
 const url = import.meta.env.VITE_SUPABASE_URL as string | undefined
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
 
-/** Set when the build has no Supabase settings; main.tsx shows it instead of the app. */
-export const configError = !url || !anonKey
-  ? 'This build has no Supabase settings. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY (.env.local locally, Netlify environment variables when deployed).'
-  : null
+/** Set when the Supabase settings are missing or malformed; main.tsx shows it instead of the app. */
+export const configError = configProblem(url, anonKey)
+
+const checked = checkSupabaseUrl(url)
 
 // The anon key is public by design; the service-role key never reaches the browser (brief §3).
-export const supabase = createClient<Database>(url ?? 'http://invalid.local', anonKey ?? 'missing', {
+export const supabase = createClient<Database>(checked.ok ? checked.url : 'http://invalid.local', anonKey?.trim() || 'missing', {
   auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
 })
 
