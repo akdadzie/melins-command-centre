@@ -6,6 +6,9 @@ import { Layout } from './components/Layout'
 import { ComingSoon, InProgress, NoAccess, NotFound } from './components/Placeholders'
 import { ImportExportPage } from './pages/ImportExportPage'
 import { MyProfile } from './pages/MyProfile'
+import { InvoiceDetail } from './features/invoices/InvoiceDetail'
+import { InvoicesPage } from './features/invoices/InvoicesPage'
+import { NewReceiptFromStatement, ReceiptsPage } from './features/receipts/ReceiptsPage'
 import { Home, MyJobs, SettingsPage, StaffPage } from './pages/SimplePages'
 import * as R from './resources/definitions'
 import { ResourceList } from './resources/ResourceList'
@@ -16,6 +19,11 @@ const SCREENS: Record<string, () => ReactNode> = {
   '/': () => <Home />,
   '/import': () => <ImportExportPage />,
   '/me': () => <MyProfile />,
+  '/invoices': () => <InvoicesPage />,
+  '/invoices/:number': () => <InvoiceDetail />,
+  '/receipts': () => <ReceiptsPage />,
+  '/receipts/new': () => <NewReceiptFromStatement />,
+  '/receipts/wht': () => <ResourceList resource={R.whtCertificates} />,
   '/settings': () => <SettingsPage />,
   '/accounts': () => <ResourceList resource={R.accounts} />,
   '/accounts/transfers': () => <ResourceList resource={R.transfers} />,

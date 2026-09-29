@@ -444,9 +444,26 @@ export const staffLoans: ResourceDef = {
   extraListColumns: [{ name: 'status', label: 'Status', type: 'text' }],
 }
 
+export const whtCertificates: ResourceDef = {
+  key: 'wht_certificates', table: 'wht_certificates', title: 'WHT certificates', singular: 'WHT certificate',
+  description: 'Created as Expected when a client pays with WHT deducted; flagged if not received within 30 days.',
+  orderBy: { column: 'expected_by' },
+  readRoles: [O, D, AC, AD], createRoles: [O, AC, AD], editRoles: [O, AC, AD], importRoles: [O, AC],
+  fields: [
+    { name: 'client_id', label: 'Client', type: 'lookup', required: true, lookup: lookups.client, list: true },
+    { name: 'amount', label: 'WHT amount', type: 'money', required: true, min: 0, list: true },
+    { name: 'certificate_number', label: 'Certificate number', type: 'text', list: true },
+    { name: 'expected_by', label: 'Expected by', type: 'date', list: true },
+    { name: 'date_received', label: 'Date received', type: 'date', list: true },
+    { name: 'status', label: 'Status', type: 'select', required: true, default: 'expected', list: true,
+      options: opts([['expected', 'Expected'], ['received', 'Received'], ['claimed', 'Claimed against tax'], ['cancelled', 'Cancelled']]) },
+    { name: 'notes', label: 'Notes', type: 'text' },
+  ],
+}
+
 export const RESOURCES: ResourceDef[] = [
   clients, referrers, suppliers, jobs, billingMilestones, jobHourBudgets, jobContracts,
-  openingInvoices, expenses, recurringExpenses, transfers, accounts, statutoryLines, directorTransactions,
+  openingInvoices, whtCertificates, expenses, recurringExpenses, transfers, accounts, statutoryLines, directorTransactions,
   staffLoans, staff, staffCostHistory, leaveEntitlements, leaveTypes, publicHolidays, whtRates,
   expenseCategories, jobTypes,
 ]

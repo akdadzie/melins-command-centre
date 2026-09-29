@@ -32,6 +32,7 @@ export const ROUTES: RouteDef[] = [
   { path: '/invoices/adjustments', title: 'Credit notes, disputes and write-offs', roles: [...OD, 'accountant', 'admin'], phase: 'A', nav: 'Money' },
   { path: '/invoices/:number', title: 'Invoice', roles: [...OD, 'accountant', 'admin', 'project_lead'], phase: 'A' },
   { path: '/receipts', title: 'Payments received', roles: [...OD, 'accountant', 'admin'], phase: 'A', nav: 'Money' },
+  { path: '/receipts/new', title: 'Record a payment', roles: [...OD, 'accountant', 'admin'], phase: 'A' },
   { path: '/receipts/wht', title: 'WHT certificates', roles: [...OD, 'accountant', 'admin'], phase: 'A', nav: 'Money' },
   { path: '/expenses', title: 'Expenses', roles: ALL, phase: 'A', nav: 'Money' },
   { path: '/expenses/recurring', title: 'Recurring expenses', roles: [...OD, 'accountant', 'admin'], phase: 'A', nav: 'Money' },
