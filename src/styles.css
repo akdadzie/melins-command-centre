@@ -181,3 +181,7 @@ table.lines th { background: #f3f3f3; }
 
 .warn-text { color: var(--warn); font-weight: 600; }
 .dialog-body h3 { margin: 1.25rem 0 .5rem; }
+.payout-bar { display: grid; gap: .5rem; margin: .75rem 0; }
+.payout-bar .steps { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
+.payout-bar .actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+tr.row-bad td { background: #fff5f6; }

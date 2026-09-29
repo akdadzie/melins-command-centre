@@ -9,6 +9,7 @@ import { MyProfile } from './pages/MyProfile'
 import { InvoiceDetail } from './features/invoices/InvoiceDetail'
 import { InvoicesPage } from './features/invoices/InvoicesPage'
 import { NewReceiptFromStatement, ReceiptsPage } from './features/receipts/ReceiptsPage'
+import { ExpensesPage, PaymentsOutPage, StaffPaymentsPage, StatutoryPage } from './features/payouts/PayoutPages'
 import { Home, MyJobs, SettingsPage, StaffPage } from './pages/SimplePages'
 import * as R from './resources/definitions'
 import { ResourceList } from './resources/ResourceList'
@@ -30,10 +31,12 @@ const SCREENS: Record<string, () => ReactNode> = {
   '/clients': () => <ResourceList resource={R.clients} />,
   '/referrers': () => <ResourceList resource={R.referrers} />,
   '/suppliers': () => <ResourceList resource={R.suppliers} />,
-  '/expenses': () => <ResourceList resource={R.expenses} />,
+  '/expenses': () => <ExpensesPage />,
+  '/payments-out': () => <PaymentsOutPage />,
+  '/staff-payments': () => <StaffPaymentsPage />,
   '/expenses/recurring': () => <ResourceList resource={R.recurringExpenses} />,
   '/staff-loans': () => <ResourceList resource={R.staffLoans} />,
-  '/tax/statutory': () => <ResourceList resource={R.statutoryLines} />,
+  '/tax/statutory': () => <StatutoryPage />,
   '/directors': () => <ResourceList resource={R.directorTransactions} />,
   '/leave/balances': () => <ResourceList resource={R.leaveEntitlements} />,
   '/team/staff': () => <StaffPage />,
