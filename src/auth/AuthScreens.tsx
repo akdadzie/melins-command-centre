@@ -158,11 +158,14 @@ export function MfaVerifyPage() {
     e.preventDefault()
     setError(null)
     const { data } = await supabase.auth.mfa.listFactors()
-    const factor = data?.totp.find((f) => f.status === 'verified')
-    if (!factor) { setError('No authenticator found on your account. Ask the Managing Director to reset it.'); return }
-    const { error } = await supabase.auth.mfa.challengeAndVerify({ factorId: factor.id, code: code.trim() })
-    if (error) setError('That code didn\'t work. Try the next one.')
-    else await refresh()
+    const factors = (data?.totp ?? []).filter((f) => f.status === 'verified')
+    if (factors.length === 0) { setError('No authenticator found on your account. Ask the Managing Director to reset it.'); return }
+    // The code may come from the main or a backup authenticator: try each.
+    for (const factor of factors) {
+      const { error } = await supabase.auth.mfa.challengeAndVerify({ factorId: factor.id, code: code.trim() })
+      if (!error) { await refresh(); return }
+    }
+    setError('That code didn\'t work. Try the next one.')
   }
 
   return (

@@ -5,6 +5,7 @@ import { AuthGate } from './auth/AuthScreens'
 import { Layout } from './components/Layout'
 import { ComingSoon, InProgress, NoAccess, NotFound } from './components/Placeholders'
 import { ImportExportPage } from './pages/ImportExportPage'
+import { MyProfile } from './pages/MyProfile'
 import { Home, MyJobs, SettingsPage, StaffPage } from './pages/SimplePages'
 import * as R from './resources/definitions'
 import { ResourceList } from './resources/ResourceList'
@@ -14,6 +15,7 @@ import { ROUTES, canOpen, type RouteDef } from './routes/routeTable'
 const SCREENS: Record<string, () => ReactNode> = {
   '/': () => <Home />,
   '/import': () => <ImportExportPage />,
+  '/me': () => <MyProfile />,
   '/settings': () => <SettingsPage />,
   '/accounts': () => <ResourceList resource={R.accounts} />,
   '/accounts/transfers': () => <ResourceList resource={R.transfers} />,

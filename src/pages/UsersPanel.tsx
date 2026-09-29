@@ -28,6 +28,7 @@ export function UsersPanel() {
     queryFn: async () => (await supabase.from('directors').select('id, full_name, profile_id').order('full_name')).data ?? [],
   })
   const [inviting, setInviting] = useState(false)
+  const [resetting, setResetting] = useState<{ id: string; name: string } | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   async function update(userId: string, patch: { role?: Role; is_active?: boolean }) {
@@ -63,9 +64,12 @@ export function UsersPanel() {
               <td>
                 {!u.accepted_invite ? <span className="muted">Invited</span> : u.is_active ? 'Active' : 'Deactivated'}
                 {u.role !== 'owner' && (
-                  <div><button className="link" onClick={() => update(u.user_id!, { is_active: !u.is_active })}>
-                    {u.is_active ? 'Deactivate' : 'Reactivate'}
-                  </button></div>
+                  <div className="row-actions">
+                    <button className="link" onClick={() => update(u.user_id!, { is_active: !u.is_active })}>
+                      {u.is_active ? 'Deactivate' : 'Reactivate'}
+                    </button>
+                    {u.accepted_invite && <button className="link" onClick={() => setResetting({ id: u.user_id!, name: u.full_name ?? '' })}>Reset 2FA</button>}
+                  </div>
                 )}
               </td>
               <td>{u.last_sign_in_at ? formatDate(u.last_sign_in_at) : '—'}</td>
@@ -74,6 +78,11 @@ export function UsersPanel() {
         </tbody>
       </table></div>
 
+      {resetting && (
+        <Dialog title={`Reset two-factor sign-in for ${resetting.name}`} onClose={() => setResetting(null)}>
+          <ResetMfaForm userId={resetting.id} onDone={async () => { setResetting(null); await qc.invalidateQueries({ queryKey: ['audit'] }) }} />
+        </Dialog>
+      )}
       {inviting && (
         <Dialog title="Invite user" onClose={() => setInviting(false)}>
           <InviteForm
@@ -158,6 +167,37 @@ function InviteForm({ staff, directors, onDone }: {
       <div className="form-actions">
         <button className="primary" disabled={busy}>{busy ? 'Sending…' : 'Send invite'}</button>
       </div>
+    </form>
+  )
+}
+
+/** Removes someone's authenticators after a lost phone; they set up a new one at next sign-in. */
+function ResetMfaForm({ userId, onDone }: { userId: string; onDone: () => void }) {
+  const [reason, setReason] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [done, setDone] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  async function submit(e: FormEvent) {
+    e.preventDefault()
+    setBusy(true); setError(null)
+    const { data, error } = await supabase.functions.invoke('reset-mfa', { body: { user_id: userId, reason } })
+    setBusy(false)
+    if (error) {
+      const detail = await (error as { context?: Response }).context?.json?.().catch(() => null)
+      setError(detail?.error ?? error.message)
+      return
+    }
+    setDone(`Done: ${data?.removed ?? 0} authenticator(s) removed and they were signed out everywhere. At their next sign-in (with their password) they set up a new one.`)
+  }
+
+  if (done) return <><p className="form-ok">{done}</p><div className="form-actions"><button className="primary" onClick={onDone}>Close</button></div></>
+  return (
+    <form onSubmit={submit} className="stack">
+      <p>Only do this after confirming with the person directly (in person or by phone): anyone with their password could then set up a new authenticator.</p>
+      <label>Reason (kept in the audit log)<input value={reason} onChange={(e) => setReason(e.target.value)} required placeholder="e.g. Phone stolen, confirmed by call on 29 Sep" /></label>
+      {error && <p className="form-error">{error}</p>}
+      <div className="form-actions"><button className="primary" disabled={busy}>{busy ? 'Resetting…' : 'Reset two-factor sign-in'}</button></div>
     </form>
   )
 }
