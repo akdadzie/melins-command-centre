@@ -10,6 +10,7 @@ import { InvoiceDetail } from './features/invoices/InvoiceDetail'
 import { InvoicesPage } from './features/invoices/InvoicesPage'
 import { NewReceiptFromStatement, ReceiptsPage } from './features/receipts/ReceiptsPage'
 import { MyPayslips, PayrollPage, PayrollRunPage, PayslipView } from './features/payroll/PayrollPages'
+import { TimesheetApprovalsPage, TimesheetPage } from './features/timesheet/TimesheetPage'
 import { ExpensesPage, PaymentsOutPage, StaffPaymentsPage, StatutoryPage } from './features/payouts/PayoutPages'
 import { Home, MyJobs, SettingsPage, StaffPage } from './pages/SimplePages'
 import * as R from './resources/definitions'
@@ -39,6 +40,8 @@ const SCREENS: Record<string, () => ReactNode> = {
   '/payroll/:month': () => <PayrollRunPage />,
   '/me/payslips': () => <MyPayslips />,
   '/me/payslips/:id': () => <PayslipView />,
+  '/timesheet': () => <TimesheetPage />,
+  '/timesheet/approvals': () => <TimesheetApprovalsPage />,
   '/expenses/recurring': () => <ResourceList resource={R.recurringExpenses} />,
   '/staff-loans': () => <ResourceList resource={R.staffLoans} />,
   '/tax/statutory': () => <StatutoryPage />,

@@ -188,3 +188,25 @@ tr.row-bad td { background: #fff5f6; }
 ul.checks { margin: .25rem 0; padding-left: 1.2rem; }
 ul.checks li.bad { color: var(--red-dark); }
 tr.total-row td { font-weight: 700; border-top: 2px solid var(--text); background: var(--panel); }
+
+/* Timesheet (phone first) */
+.timesheet { max-width: 640px; }
+label.inline { display: flex; align-items: center; gap: .5rem; }
+.week-strip { display: flex; align-items: stretch; gap: .25rem; margin: .5rem 0; }
+.week-strip .day { flex: 1; min-width: 0; padding: .35rem 0; display: flex; flex-direction: column; align-items: center; line-height: 1.1; }
+.week-strip .day span, .week-strip .day small { font-size: .7rem; color: var(--muted); }
+.week-strip .day.active { background: var(--red); border-color: var(--red); color: #fff; }
+.week-strip .day.active span, .week-strip .day.active small { color: #fff; }
+.entry-form { display: grid; gap: .75rem; }
+.chip-row { display: flex; flex-wrap: wrap; gap: .4rem; }
+.chip { min-height: 40px; border-radius: 999px; padding: 0 .9rem; }
+.chip.on { background: var(--red-tint); border-color: var(--red); color: var(--red-dark); font-weight: 600; }
+.hours { display: flex; align-items: center; justify-content: center; gap: 1.25rem; }
+.hours output { font-size: 1.1rem; min-width: 4.5rem; text-align: center; }
+.hours output strong { font-size: 2rem; }
+button.big { width: 56px; height: 56px; border-radius: 50%; font-size: 1.6rem; }
+button.wide { width: 100%; min-height: 52px; font-size: 1.05rem; }
+ul.entry-list { list-style: none; padding: 0; margin: 0; display: grid; gap: .5rem; }
+ul.entry-list li { display: flex; justify-content: space-between; gap: .75rem; align-items: flex-start; padding: .6rem .75rem; border: 1px solid var(--line); border-radius: var(--radius); }
+ul.entry-list li.pending { border-style: dashed; }
+ul.entry-list li.rejected { border-color: var(--red); background: #fff5f6; }

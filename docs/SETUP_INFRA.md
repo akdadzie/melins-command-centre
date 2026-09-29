@@ -102,7 +102,7 @@ Create a folder such as **"MeLiNS Command Centre – Backups"**, shared only wit
 ## 9. First sign-in on staging (and later production)
 Do these once per environment, in this order:
 1. **Apply the latest migrations.** In `C:\dev\melins-ims`, run `npx supabase db push` (while linked to staging).
-2. **Deploy the invite function.** Run `npx supabase functions deploy invite-user`. Supabase gives it the service-role key automatically, and nothing is stored in the repo.
+2. **Deploy the Edge Functions.** Run `npx supabase functions deploy invite-user` and `npx supabase functions deploy reset-mfa`. Supabase gives them the service-role key automatically, and nothing is stored in the repo.
 3. **Invite yourself.** Supabase dashboard → **Authentication → Users → Invite user**, with your email.
 4. **Make that log-in the Owner.** Supabase dashboard → **SQL Editor** → run:
    ```sql

@@ -13,10 +13,10 @@ Every decision, assumption and change made during the build goes here. Read this
 
 | Item | State |
 |---|---|
-| Current phase | **Phase A: forms and CSV import** (29 Sep 2026). Migrations 0100-1000 are applied to staging and verified; 1100 (user provisioning) is waiting to be pushed. The front end has sign-in with 2FA, guarded routes, forms and CSV import/export for the reference and go-live data, and the Users screen. Next: invoices, receipts and payments screens, the payroll import, timesheets, then the home screens. |
+| Current phase | **Phase A: screens** (29 Sep 2026). Migrations through 1100 are applied to staging; the Owner is signed in with 2FA. 1200 (2FA recovery) is waiting to be pushed. Built: sign-in and recovery, forms and CSV import/export, Users, invoices, payments received, payments out (supplier, staff, statutory), claim approvals, payroll import and payslips, the mobile timesheet and approvals. Next: leave screens, jobs detail, accounts and reconciliation, month close, then the home screens and reminders. |
 | Brief | PROJECT_BRIEF.md = `MeLiNS_Command_Centre_Build_Prompt_v2.txt`, revision 2.4 (28 Sep 2026), copied unchanged |
 | Repository | https://github.com/akdadzie/melins-command-centre (private); local folder `C:\dev\melins-ims` |
-| Waiting on Owner | Push migration 1100 and deploy `invite-user` (`docs/SETUP_INFRA.md` §9); bootstrap the Owner account on staging; add the staging anon key to `.env.local`; SMTP/DNS setup; statement samples; user email list |
+| Waiting on Owner | Push migration 1200 and deploy `reset-mfa` and `invite-user` (`docs/SETUP_INFRA.md` §9); add a backup authenticator (`docs/ACCESS_RECOVERY.md`); confirm the NSP sheet's column layout; SMTP/DNS setup; statement samples; user email list |
 
 ---
 
@@ -241,6 +241,19 @@ Forms and CSV import share one parser (`coerce.ts`), so any row that imports is 
 
 **A-034: Stack details.** React Router 7 and TanStack Query, with plain CSS in MeLiNS red. Mobile-first: forms and dialogs go full-screen on phones. If a build has no Supabase settings, the app shows a clear "not configured" screen instead of failing silently.
 
+**A-035: How the timesheet works offline.**
+- Entries are queued in the browser's local storage (not IndexedDB, as A-001 had planned): it's simpler and holds well over a week of entries.
+- Each entry carries an ID made on the phone, so a retry never duplicates it. Retries happen when the connection returns, when the app comes back to the foreground, and every 30 seconds.
+- An entry the database refuses (for example, the window has closed) is kept with the reason and not retried. The person can try again or discard it.
+- If a retry is refused but the entry is already on the server (the first save's reply was lost), it counts as saved.
+
+**A-036: Printed documents.** Invoices and payslips are printed from the browser ("Print / Save as PDF") on the letterhead, with a draft invoice watermarked "not a tax invoice". PDFs stored by an Edge Function, and the payslip-ready email, come with the reminders step.
+
+**A-037: Two-factor recovery** (docs/ACCESS_RECOVERY.md).
+- People add a backup authenticator on My profile.
+- The Owner resets anyone else's from Settings > Users. That needs a reason, signs the person out everywhere, and is recorded in the audit log.
+- The Owner's own reset is `app.reset_mfa()` in the Supabase SQL editor, also audit-logged. The Supabase dashboard account (with its recovery codes stored offline) is the last line of recovery.
+
 ---
 
 ## Findings from the payroll workbook (28 Sep 2026)
@@ -255,6 +268,10 @@ Forms and CSV import share one parser (`coerce.ts`), so any row that imports is 
 
 **F-003: The workbook contains hidden sheets for another organisation's employees** (JAN 16, DEC 15, and five named sheets from a microfinance company's 2015/16 payroll). The import reads only the two mapped sheets. The Owner may want to delete those sheets.
 
+**F-004: Rounding in the CSV export.** PAYE and Net Pay are held in Excel to more than 2 decimal places, and a CSV export writes the displayed 2-decimal values.
+- On the May sheet, Kwasi's line is out by exactly GHS 0.01 after rounding. The 0.01 line tolerance (D-023) accepts it, so the run passes.
+- If rounding ever makes a line differ by 0.02, the check will block it. Either wrap those formulas in `ROUND(…, 2)` in the sheet (recommended), or raise the line tolerance in Settings.
+
 ---
 
 ## Open questions
@@ -264,3 +281,5 @@ Forms and CSV import share one parser (`coerce.ts`), so any row that imports is 
 **Q-24 (non-blocking): December bonus columns.** The May workbook has no bonus columns. When the Accountant prepares the December sheet, confirm the column mapping for the 13th-month bonus and bonus PAYE. The schema already has both fields.
 
 **Q-25 (non-blocking): Confirming payments when the Accountant is away.** The brief lets only the Accountant confirm client payments, against the statement. Should the Owner also be able to confirm in an emergency? The current build says no.
+
+**Q-26 (blocks the NSP import only): The national service sheet.** The May 2026 workbook has one payroll sheet ("Staff "), which includes Nana Poku. Please send the NSP sheet, or its heading row and column letters, so its column map can be saved. Until then, the import uses the staff sheet's layout for it.
