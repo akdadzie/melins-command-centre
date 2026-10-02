@@ -112,6 +112,28 @@ It is modelled as Tier 3 (employee and employer), with a dated rate setting defa
 
 **D-026:** Assumptions A-001 to A-014 were agreed by the Owner on 28 Sep 2026, as amended by D-005 to D-025.
 
+### Owner's answers, 2 Oct 2026 (Q-23 to Q-26, go-live)
+
+**D-027 (Q-23): Cost to company = gross pay + employer SSNIT (13%) + employer PF (if any).** This is the figure in the payroll sheet's "Total Cost To Company" column (AE, the last-but-one column), e.g. Francis Austin 7,442.50 = gross 6,955.00 + employer SSF 487.50.
+- Post-tax allowances are **not** included. This replaces the recommendation in A-027.
+- Staff cost history, rates and the monthly running cost all use this figure. The run's checks warn when the sheet's own column differs from it (see F-002).
+- Built in migration 1300.
+
+**D-028 (Q-25): The Owner can confirm client payments as the Accountant's backup.**
+- The confirmation is recorded with who and when, and is in the audit log.
+- The Accountant is notified, and the payment counts as an unreviewed entry: the month can't close until the Accountant marks it Reviewed, or sends it back to Reported with a reason (which takes it out of cash and tells the Owner).
+- A payment the Accountant confirms needs no further review (A-021 still holds for them).
+- Built in migration 1300.
+
+**D-029: Go-live.** Opening balances are as at **30 Sep 2026**, so **October 2026 is the first month run in the system** and the first month closed in it.
+- GCB operating account: closing balance **GHS 83,115.12** on 30 Sep 2026, per the bank statement.
+- An account's opening balance is the balance at the start of its opening date. So each account is entered with opening date **1 Oct 2026** and the 30 Sep closing balance (GCB: 83,115.12). Ledger entries count from 1 Oct, so nothing dated 30 Sep or earlier changes the balance, and no September reconciliation is needed.
+- The other accounts (MTN MoMo, petty cash, reserve) are entered the same way, with their own 30 Sep balances, in the setup wizard. Opening receivables are the invoices still unpaid at 30 Sep (A-024), and statutory arrears are those outstanding at 30 Sep.
+
+**D-030 (Q-26): The NSP import is built last in Phase A.** The Owner will send the NSP sheet's layout (figures blanked). Until then the NSP sheet uses the staff sheet's column map.
+
+**D-031 (Q-24): December bonus columns stay open.** The Owner will supply the December bonus layout before November. Nothing waits on it in Phase A.
+
 ---
 
 ## Assumptions
@@ -197,7 +219,7 @@ These came up while building the schema. Each is easy to change if the Owner or 
 - Tier 1 and Tier 2 split the SSNIT actually contributed (employee plus employer) in the ratio 13.5 : 5, so national service persons (no SSNIT) have nil tiers.
 - Bonus PAYE is imported as its own column. The net check subtracts it.
 - The sheet's 0.01 rounding is absorbed by the line tolerance (0.01) and the total tolerance (0.05), both in Settings.
-- Cost updates proposed from a run use the full cost to company (Q-23 recommendation). The Owner confirms them before they're added to the cost history.
+- Cost updates proposed from a run use the cost to company as defined in D-027 (gross + employer SSNIT + employer PF; this replaced the Q-23 recommendation, which also added post-tax allowances). The Owner confirms them before they're added to the cost history.
 
 **A-028: One approval flow for all money out.** It covers supplier payments, staff reimbursements, staff loans, payments to directors and statutory payments.
 - After approval, only the payment details (date, account, method, reference) can change.
@@ -264,7 +286,7 @@ Forms and CSV import share one parser (`coerce.ts`), so any row that imports is 
 - From the **September 2026** run, the new bands in D-004 apply (monthly: 588 nil / 80 @5% / 100 @10% / 2,900 @17.5% / 16,000 @25% / 30,332 @30% / above 50,000 @35%).
 - The system imports PAYE and doesn't recalculate it (version 1), so it can't catch this. **The Accountant must update the sheet.**
 
-**F-002: The sheet's "Total Cost To Company" = Gross + Employer SSF only.** It leaves out employer PF (Tier 3) and the post-tax allowances. Both are nil today, so the figures agree for now. See Q-23.
+**F-002: The sheet's "Total Cost To Company" formula is Gross + Employer SSF** (`=T + I`). The Owner defines cost to company as gross + employer SSNIT + employer PF (D-027), so the system's figure and the sheet's agree while the PF rate is 0%. **If employer PF ever starts, the Accountant should change column AE to `=I + T + U`.** Until then, the payroll checks warn on any line where the two differ.
 
 **F-003: The workbook contains hidden sheets for another organisation's employees** (JAN 16, DEC 15, and five named sheets from a microfinance company's 2015/16 payroll). The import reads only the two mapped sheets. The Owner may want to delete those sheets.
 
@@ -276,10 +298,8 @@ Forms and CSV import share one parser (`coerce.ts`), so any row that imports is 
 
 ## Open questions
 
-**Q-23 (non-blocking): Cost to company.** *Built with the recommendation (A-027); both figures are stored.* Should staff cost history and job costing use the full figure (Gross + employer SSNIT + employer PF + post-tax allowances), or the sheet's Gross + Employer SSF? Recommended: the full figure, with a warning when it differs from the sheet. Both are identical today, and the schema stores every component either way.
+**Q-24 (non-blocking): December bonus columns.** The May workbook has no bonus columns. The Owner will supply the December bonus layout before November (D-031). The schema already has the bonus and bonus PAYE fields.
 
-**Q-24 (non-blocking): December bonus columns.** The May workbook has no bonus columns. When the Accountant prepares the December sheet, confirm the column mapping for the 13th-month bonus and bonus PAYE. The schema already has both fields.
+**Q-26 (blocks the NSP import only): The national service sheet's layout.** The Owner will send it with the figures blanked. The NSP import is built last in Phase A (D-030).
 
-**Q-25 (non-blocking): Confirming payments when the Accountant is away.** The brief lets only the Accountant confirm client payments, against the statement. Should the Owner also be able to confirm in an emergency? The current build says no.
-
-**Q-26 (blocks the NSP import only): The national service sheet.** The May 2026 workbook has one payroll sheet ("Staff "), which includes Nana Poku. Please send the NSP sheet, or its heading row and column letters, so its column map can be saved. Until then, the import uses the staff sheet's layout for it.
+*Answered 2 Oct 2026: Q-23 → D-027, Q-25 → D-028.*

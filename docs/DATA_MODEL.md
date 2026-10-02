@@ -16,6 +16,9 @@ The schema, RLS, triggers and reference data live in `supabase/migrations`, appl
 | `0800_views` | Balances, ageing, chase list, ready to invoice, retention, job money status, hours vs budget, utilisation, compliance, missing days, leave balances, running cost, Money panel, monthly summary, Accountant queue |
 | `0900_reference_data` | Directors, budget roles, the 8 staff with approvers and first costs, job types, leave types, tax code names, chart of categories |
 | `1000_hardening` | Revokes API access to the internal write helpers |
+| `1100_user_provisioning` | Profiles created from Owner invites; the user directory |
+| `1200_mfa_recovery` | Audited two-factor resets |
+| `1300_owner_answers` | Cost to company = gross + employer SSNIT + employer PF (D-027); the Owner confirms payments as the Accountant's backup, reviewed by the Accountant before close (D-028) |
 
 ## How it fits together
 
@@ -79,6 +82,8 @@ pg_ctl -D <dir> -o "-p 54329" start
 | `40_test_close.sql` | 11, 13, 14, 25 |
 | `50_test_payroll.sql` | 20, 21, D-022..D-024 |
 | `60_test_time_leave.sql` | 29-36 |
+| `70_test_provisioning.sql`, `80_test_mfa_recovery.sql` | A-033, A-037 |
+| `90_test_owner_answers.sql` | D-027, D-028 |
 
 Items 1, 2 and 28 (domain and email, routes, CSV and backups) are tested at the front-end and infrastructure stage. The same acceptance tests are re-run on staging before production.
 

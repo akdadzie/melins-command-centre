@@ -147,7 +147,7 @@ end $$;
 select tests.login('admin@t');
 set role authenticated;
 do $$ begin
-  perform tests.throws($q$update public.receipts set status = 'confirmed'$q$, '%Only the Accountant confirms%', '10: admin cannot confirm');
+  perform tests.throws($q$update public.receipts set status = 'confirmed'$q$, '%Only the Accountant%confirms%', '10: admin cannot confirm');
 end $$;
 reset role;
 select tests.login('acct@t');

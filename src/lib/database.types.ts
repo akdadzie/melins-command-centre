@@ -3405,6 +3405,10 @@ export type Database = {
           received_by_director_id: string | null
           reference: string | null
           rejection_reason: string | null
+          review_note: string | null
+          review_status: string
+          reviewed_at: string | null
+          reviewed_by: string | null
           source: string
           statement_line_id: string | null
           status: string
@@ -3431,6 +3435,10 @@ export type Database = {
           received_by_director_id?: string | null
           reference?: string | null
           rejection_reason?: string | null
+          review_note?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           source: string
           statement_line_id?: string | null
           status?: string
@@ -3457,6 +3465,10 @@ export type Database = {
           received_by_director_id?: string | null
           reference?: string | null
           rejection_reason?: string | null
+          review_note?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           source?: string
           statement_line_id?: string | null
           status?: string

@@ -30,7 +30,7 @@ const total = (r: Pick<Receipt, 'cash_amount' | 'wht_amount' | 'vat_withheld_amo
   Number(r.cash_amount) + Number(r.wht_amount) + Number(r.vat_withheld_amount)
 const allocated = (r: Receipt) => (r.allocations ?? []).reduce((s, a) => s + total(a), 0)
 
-type TabKey = 'reported' | 'confirmed' | 'rejected' | 'all'
+type TabKey = 'reported' | 'review' | 'confirmed' | 'rejected' | 'all'
 
 export function ReceiptsPage() {
   const { role } = useAuth()
@@ -41,15 +41,17 @@ export function ReceiptsPage() {
   const openId = params.get('id')
   const writer = canWrite(role) && ['owner', 'accountant', 'admin'].includes(role ?? '')
 
-  const rows = data.filter((r) => tab === 'all' || r.status === tab)
+  const toReview = (r: Receipt) => r.status === 'confirmed' && r.review_status === 'recorded'
+  const rows = data.filter((r) => tab === 'all' || (tab === 'review' ? toReview(r) : r.status === tab))
   const reportedCount = data.filter((r) => r.status === 'reported').length
+  const reviewCount = data.filter(toReview).length
 
   return (
     <section>
       <header className="page-header">
         <div>
           <h1>Payments received</h1>
-          <p className="muted">Whoever hears first logs it; the Accountant confirms it against the statement. Only confirmed payments count as cash.</p>
+          <p className="muted">Whoever hears first logs it; the Accountant confirms it against the statement (the Owner can confirm as backup, and the Accountant then reviews it). Only confirmed payments count as cash.</p>
         </div>
         <div className="actions">
           {role === 'owner' && <button className="primary" onClick={() => setCreating('quick')}>+ Payment received</button>}
@@ -57,6 +59,7 @@ export function ReceiptsPage() {
         </div>
       </header>
       <Tabs value={tab} onChange={setTab} tabs={[{ key: 'reported', label: 'To confirm', count: reportedCount },
+        ...(reviewCount > 0 || role === 'accountant' ? [{ key: 'review' as const, label: 'Owner-confirmed to review', count: reviewCount }] : []),
         { key: 'confirmed', label: 'Confirmed' }, { key: 'rejected', label: 'Rejected' }, { key: 'all', label: 'All' }]} />
       {error && <p className="form-error">{friendlyError(error as Error)}</p>}
       {isLoading ? <p className="muted">Loading…</p> : rows.length === 0 ? <p className="empty">Nothing here.</p> : (
@@ -71,7 +74,7 @@ export function ReceiptsPage() {
                 <td><Money value={r.cash_amount} /></td><td><Money value={r.wht_amount} /></td><td><Money value={r.vat_withheld_amount} /></td>
                 <td>{r.method?.replace(/_/g, ' ') ?? <span className="muted">details missing</span>}{r.received_by_director_id && <div className="small">held by a director</div>}</td>
                 <td>{Math.abs(unallocated) < 0.005 ? 'Yes' : <span className="warn-text">{formatMoney(unallocated)} not allocated</span>}</td>
-                <td><StatusBadge status={r.status} /></td>
+                <td><StatusBadge status={r.status} />{toReview(r) && <div className="small warn-text">to review</div>}</td>
               </tr>
             )
           })}</tbody>
@@ -275,6 +278,7 @@ function ReceiptDetail({ id, onClose }: { id: string; onClose: () => void }) {
   })
   const [value, setValue] = useState<ReceiptFields | null>(null)
   const [rejecting, setRejecting] = useState(false)
+  const [sendingBack, setSendingBack] = useState(false)
   const action = useAction()
   useEffect(() => { if (r) setValue(fieldsFrom(r as unknown as Receipt)) }, [r])
 
@@ -313,18 +317,40 @@ function ReceiptDetail({ id, onClose }: { id: string; onClose: () => void }) {
         <strong className={Math.abs(remaining) > 0.005 ? 'warn-text' : undefined}>{formatMoney(remaining)} left</strong></p>
       <Allocations receiptId={id} receipt={r} allocs={allocs.data ?? []} openInvoices={openInvoices.data ?? []} editable={!!editable} onChanged={refresh} remaining={remaining} />
 
+      {r.status === 'confirmed' && r.review_status === 'recorded' && (
+        <p className="warn-text small">Confirmed by the Owner as the Accountant's backup: waiting for the Accountant's review (D-028).</p>
+      )}
+      {r.status === 'confirmed' && r.review_status === 'reviewed' && <p className="muted small">Owner's confirmation reviewed by the Accountant {formatDate(r.reviewed_at)}.</p>}
+      {r.status === 'reported' && r.review_note && <p className="warn-text small">Sent back by the Accountant: {r.review_note}</p>}
       {action.error && <p className="form-error">{action.error}</p>}
       <div className="form-actions">
-        {role === 'accountant' && r.status === 'reported' && (
+        {(role === 'accountant' || role === 'owner') && r.status === 'reported' && (
           <button className="primary" disabled={action.busy} onClick={() => action.run(async () => {
             const { error } = await supabase.from('receipts').update({ status: 'confirmed' }).eq('id', id)
             if (error) return friendlyError(error)
             await refresh()
-          })}>Confirm against statement</button>
+          })}>{role === 'owner' ? 'Confirm (as Accountant\'s backup)' : 'Confirm against statement'}</button>
         )}
+        {role === 'accountant' && r.status === 'confirmed' && r.review_status === 'recorded' && <>
+          <button className="primary" disabled={action.busy} onClick={() => action.run(async () => {
+            const { error } = await supabase.from('receipts').update({ review_status: 'reviewed' }).eq('id', id)
+            if (error) return friendlyError(error)
+            await refresh()
+          })}>Reviewed: matches the statement</button>
+          <button onClick={() => setSendingBack(true)}>Send back to Reported</button>
+        </>}
         {(role === 'accountant' || role === 'owner') && r.status === 'reported' && <button onClick={() => setRejecting(true)}>Reject</button>}
         <button onClick={onClose}>Close</button>
       </div>
+      {sendingBack && (
+        <PromptDialog title="Send back to Reported" label="Why? (e.g. not on the statement)" confirmLabel="Send back"
+          onClose={() => setSendingBack(false)}
+          onSubmit={async (note) => {
+            const { error } = await supabase.from('receipts').update({ status: 'reported', review_note: note }).eq('id', id)
+            if (error) return friendlyError(error)
+            await refresh(); return null
+          }} />
+      )}
       {rejecting && (
         <PromptDialog title="Reject this payment" label="Reason (e.g. duplicate, not on the statement)" confirmLabel="Reject"
           onClose={() => setRejecting(false)}
