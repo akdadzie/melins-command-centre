@@ -135,6 +135,7 @@ export const jobs: ResourceDef = {
   orderBy: { column: 'job_number', ascending: false },
   readRoles: [O, D, AC, AD, PL], createRoles: [O, AD, PL], editRoles: [O, AD, PL], importRoles: [O, AD],
   importDefaults: { is_imported: true },
+  rowLink: (r) => `/jobs/${encodeURIComponent(String(r.job_number))}`,
   fields: [
     { name: 'job_number', label: 'Job number', type: 'text', createOnly: true, list: true,
       help: 'Leave blank for a new job. For imported jobs, the existing number (e.g. MEL-2025-014).' },

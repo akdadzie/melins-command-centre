@@ -72,7 +72,7 @@ export function MyJobs() {
         <div className="table-wrap"><table>
           <thead><tr><th>Job</th><th>Client</th><th>Status</th><th>Due</th></tr></thead>
           <tbody>{data.map((j) => (
-            <tr key={j.id}><td>{j.job_number} {j.title}</td><td>{j.client_name}</td><td>{j.delivery_status?.replace(/_/g, ' ')}</td><td>{formatDate(j.due_date)}</td></tr>
+            <tr key={j.id}><td><Link to={`/jobs/${j.job_number}`}>{j.job_number} {j.title}</Link></td><td>{j.client_name}</td><td>{j.delivery_status?.replace(/_/g, ' ')}</td><td>{formatDate(j.due_date)}</td></tr>
           ))}</tbody>
         </table></div>
       )}

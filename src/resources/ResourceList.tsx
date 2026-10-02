@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '../auth/AuthProvider'
 import { canWrite } from '../auth/roles'
@@ -41,6 +42,7 @@ export function ResourceList({ resource }: { resource: ResourceDef }) {
   const [search, setSearch] = useState('')
   const [editing, setEditing] = useState<Row | 'new' | null>(null)
   const [importing, setImporting] = useState(false)
+  const navigate = useNavigate()
 
   const writer = canWrite(role)
   const canCreate = writer && role !== null && resource.createRoles.includes(role)
@@ -82,7 +84,7 @@ export function ResourceList({ resource }: { resource: ResourceDef }) {
             </thead>
             <tbody>
               {filtered.map((r) => (
-                <tr key={JSON.stringify(primaryKeyOf(resource, r))} className="clickable" onClick={() => setEditing(r)}>
+                <tr key={JSON.stringify(primaryKeyOf(resource, r))} className="clickable" onClick={() => (resource.rowLink ? navigate(resource.rowLink(r)) : setEditing(r))}>
                   {listFields.map((f) => <td key={f.name}>{cell(f, r[f.name], text(f, r))}</td>)}
                   {(resource.extraListColumns ?? []).map((c) => (
                     <td key={c.name}>{cell(c, r[c.name], String(r[c.name] ?? '').replace(/_/g, ' '))}</td>

@@ -29,14 +29,19 @@ interface Props {
   /** null = create */
   row: Row | null
   onDone: (saved: Row | null) => void
+  /** Values for a new record, e.g. the job a milestone is added to. */
+  preset?: Row
+  /** Fields not shown (their preset value is still saved). */
+  hide?: string[]
 }
 
-export function ResourceForm({ resource, row, onDone }: Props) {
+export function ResourceForm({ resource, row, onDone, preset, hide }: Props) {
   const { role } = useAuth()
   const qc = useQueryClient()
   const fields = useMemo(() => visibleFields(resource, role), [resource, role])
   const { indexes, options, loading } = useLookupIndexes(fields)
-  const [values, setValues] = useState<Values>(() => Object.fromEntries(fields.map((f) => [f.name, initialValue(f, row)])))
+  const [values, setValues] = useState<Values>(() => Object.fromEntries(fields.map((f) =>
+    [f.name, !row && preset && f.name in preset ? initialValue(f, preset) : initialValue(f, row)])))
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [formError, setFormError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -49,6 +54,7 @@ export function ResourceForm({ resource, row, onDone }: Props) {
     const errs: Record<string, string> = {}
     for (const f of fields) {
       if (editing && f.createOnly) continue
+      if (hide?.includes(f.name) && !(preset && f.name in preset && !editing)) continue
       const raw = values[f.name]
       const res = coerce(f, f.type === 'boolean' ? (raw ? 'yes' : 'no') : raw, indexes[f.name])
       if (res.ok) out[f.name] = res.value
@@ -75,7 +81,7 @@ export function ResourceForm({ resource, row, onDone }: Props) {
     <form className="resource-form" onSubmit={submit} noValidate>
       {loading && <p className="muted small">Loading lists…</p>}
       <div className="form-grid">
-        {fields.map((f) => {
+        {fields.filter((f) => !hide?.includes(f.name)).map((f) => {
           const disabled = !canSave || (editing && f.createOnly)
           const id = `f-${resource.key}-${f.name}`
           const v = values[f.name]

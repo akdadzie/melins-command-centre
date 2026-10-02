@@ -61,6 +61,8 @@ export interface ResourceDef {
   importDefaults?: Record<string, unknown>
   /** Values added to every row created from the form. */
   createDefaults?: Record<string, unknown>
+  /** Clicking a row opens this page instead of the edit form (e.g. job detail). */
+  rowLink?: (row: Row) => string
   /** Extra read-only columns shown in the list (computed by the database). */
   extraListColumns?: { name: string; label: string; type: FieldType }[]
 }
