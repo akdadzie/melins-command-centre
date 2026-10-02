@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { Link } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '../auth/AuthProvider'
-import { ROLE_LABELS, type Role } from '../auth/roles'
 import { formatDate } from '../lib/format'
 import { supabase } from '../lib/supabase'
 import { ResourceList } from '../resources/ResourceList'
@@ -76,29 +75,6 @@ export function MyJobs() {
           ))}</tbody>
         </table></div>
       )}
-    </section>
-  )
-}
-
-const QUICK: Partial<Record<Role, { to: string; label: string }[]>> = {
-  owner: [{ to: '/import', label: 'Load go-live data' }, { to: '/clients', label: 'Clients' }, { to: '/jobs', label: 'Jobs' }, { to: '/settings', label: 'Settings' }],
-  accountant: [{ to: '/import', label: 'Import and export' }, { to: '/tax/statutory', label: 'Statutory ledger' }, { to: '/settings', label: 'Tax settings' }],
-  admin: [{ to: '/expenses', label: 'Record an expense' }, { to: '/clients', label: 'Clients' }, { to: '/jobs', label: 'Jobs' }, { to: '/import', label: 'Import data' }],
-  project_lead: [{ to: '/jobs', label: 'Jobs' }, { to: '/clients', label: 'Clients' }],
-  staff: [{ to: '/jobs', label: 'My jobs' }, { to: '/expenses', label: 'My expense claims' }],
-  director: [{ to: '/jobs', label: 'Jobs' }, { to: '/clients', label: 'Clients' }],
-}
-
-/** Home screens (brief §6) are built after the list and detail views; this is the interim start page. */
-export function Home() {
-  const { profile, role } = useAuth()
-  return (
-    <section>
-      <h1>Welcome, {profile?.full_name.split(' ')[0]}</h1>
-      <p className="muted">Signed in as {role ? ROLE_LABELS[role] : ''}{role === 'director' ? '. You can see everything, and change nothing.' : '.'}</p>
-      <div className="quick-links">
-        {(role ? QUICK[role] ?? [] : []).map((q) => <Link key={q.to} className="tile" to={q.to}>{q.label}</Link>)}
-      </div>
     </section>
   )
 }

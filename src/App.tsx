@@ -16,7 +16,9 @@ import { CloseRedirect, MonthClosePage } from './features/close/MonthClosePage'
 import { JobDetail } from './features/jobs/JobDetail'
 import { LeaveBalancesPage, LeaveCalendarPage, LeaveRequestsPage, MyLeavePage } from './features/leave/LeavePages'
 import { ExpensesPage, PaymentsOutPage, StaffPaymentsPage, StatutoryPage } from './features/payouts/PayoutPages'
-import { Home, MyJobs, SettingsPage, StaffPage } from './pages/SimplePages'
+import { Home } from './features/home/HomePages'
+import { MonthlySummaryPage, NotificationsPage } from './features/home/SummaryPages'
+import { MyJobs, SettingsPage, StaffPage } from './pages/SimplePages'
 import * as R from './resources/definitions'
 import { ResourceList } from './resources/ResourceList'
 import { ROUTES, canOpen, type RouteDef } from './routes/routeTable'
@@ -24,6 +26,8 @@ import { ROUTES, canOpen, type RouteDef } from './routes/routeTable'
 /** Screens built so far. Everything else in ROUTES shows its placeholder. */
 const SCREENS: Record<string, () => ReactNode> = {
   '/': () => <Home />,
+  '/notifications': () => <NotificationsPage />,
+  '/reports/monthly': () => <MonthlySummaryPage />,
   '/import': () => <ImportExportPage />,
   '/me': () => <MyProfile />,
   '/invoices': () => <InvoicesPage />,

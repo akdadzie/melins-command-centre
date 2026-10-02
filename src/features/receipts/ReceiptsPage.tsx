@@ -37,7 +37,8 @@ export function ReceiptsPage() {
   const [params, setParams] = useSearchParams()
   const { data = [], isLoading, error } = useQuery({ queryKey: ['receipts'], queryFn: listReceipts })
   const [tab, setTab] = useState<TabKey>('reported')
-  const [creating, setCreating] = useState<null | 'quick' | 'full'>(null)
+  // /receipts?new=quick opens the Owner's quick-log (the home screen's "+ Payment received").
+  const [creating, setCreating] = useState<null | 'quick' | 'full'>(() => (params.get('new') === 'quick' && role === 'owner' ? 'quick' : null))
   const openId = params.get('id')
   const writer = canWrite(role) && ['owner', 'accountant', 'admin'].includes(role ?? '')
 

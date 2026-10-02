@@ -300,6 +300,17 @@ Forms and CSV import share one parser (`coerce.ts`), so any row that imports is 
 - **Admin's view** of the blockers is limited to Admin's own part: queried entries, reported payments and recurring drafts. Statement lines and reconciliations are the Accountant's (Admin never handles statements).
 - **Go-live.** The screen starts at October 2026 (D-029); earlier months aren't closed in the system.
 
+**A-041: Home screens (brief §6).**
+- **Owner:** the Money panel, then Pipeline, then Delivery, with "+ Payment received" at the top (it opens the quick-log directly). Invoices and payments out awaiting approval sit in the Money panel.
+- **Directors:** the same panels with no approval tiles, plus a link to the monthly summary.
+- **Accountant:** entries to review (opening the month-close review queue), payments to confirm (including Owner-confirmed ones to review, D-028), accounts not reconciled for last month, and the close status, then the Money panel.
+- **Admin:** a task list with no balances or totals, built from its open tasks plus invoices due a chase reminder today (7 days before due, due date, 14/30/60 days overdue), items ready to invoice and overdue WHT certificates.
+- **Project lead:** expense claims to approve, milestones due within 14 days, the team's timesheet compliance this month, and the Delivery panel limited to the team's approvals.
+- **Staff:** hours this week (with a weekly guide of monthly target ÷ 4.33), annual leave left, latest payslip, upcoming leave and open expense claims.
+- **Delivery panel (basic, Phase A):** jobs past due or over an hours budget, utilisation for this month and the last 3, who is away this week and next, entries and leave awaiting approval, and days not logged last week.
+- Pipeline, trips, tasks, valuations, commitments and overheads show a "Phase B/C" note (A-010).
+- `/reports/monthly` shows the month's fees, costs, cash and tax, and whether it's closed. `/notifications` lists the user's notifications; the bell shows the unread count.
+
 ---
 
 ## Findings from the payroll workbook (28 Sep 2026)
