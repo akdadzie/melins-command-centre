@@ -294,6 +294,12 @@ Forms and CSV import share one parser (`coerce.ts`), so any row that imports is 
 - **Matching.** A statement line is matched to a movement in the books (a confirmed receipt, an expense, a payment…). The screen suggests movements with the same amount within 7 days that aren't already matched. A line that isn't in the books is either explained, or (for money in) handed to Admin as a "Record this receipt" task, or recorded at once by the Accountant.
 - **Reconciling.** The month's reconciliation compares the statement's closing balance with the calculated balance at month end. It can't close while any statement line up to that date is unmatched, or while a difference is unexplained (acceptance 13). Movements in the books but not on the statement are listed for the Accountant to follow up.
 
+**A-040: Month-close screen (`/close/:month`).**
+- It lists everything blocking the close, grouped and linked to each record, and both checklists (brief §9). The Accountant (or the Owner) closes once nothing blocks it. Only the Owner reopens, with a reason, which the Accountant is told. The Owner marks the close reviewed.
+- **Review queue.** Every money entry waiting for review is listed with what it is, the amount and who entered it, with Mark reviewed / Query buttons for the Accountant. This is how Admin's expenses, transfers, loan repayments and director entries get reviewed; until now those lists had no review buttons.
+- **Admin's view** of the blockers is limited to Admin's own part: queried entries, reported payments and recurring drafts. Statement lines and reconciliations are the Accountant's (Admin never handles statements).
+- **Go-live.** The screen starts at October 2026 (D-029); earlier months aren't closed in the system.
+
 ---
 
 ## Findings from the payroll workbook (28 Sep 2026)

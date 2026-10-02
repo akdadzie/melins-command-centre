@@ -6240,6 +6240,19 @@ export type Database = {
         Returns: number
       }
       close_month: { Args: { p_month: string }; Returns: undefined }
+      entries_to_review: {
+        Args: { p_month?: string }
+        Returns: {
+          amount: number
+          description: string
+          entered_by: string
+          entry_date: string
+          query_note: string
+          record_id: string
+          record_type: string
+          review_status: string
+        }[]
+      }
       mark_month_reviewed: { Args: { p_month: string }; Returns: undefined }
       missing_timesheet_days: {
         Args: { p_from: string; p_to?: string }

@@ -52,5 +52,7 @@ begin
   return n;
 end $$;
 
-revoke execute on function public.set_up_leave_year(int) from anon;
-revoke execute on function public.working_days(date, date) from anon;
+revoke execute on function public.set_up_leave_year(int) from public, anon;
+revoke execute on function public.working_days(date, date) from public, anon;
+grant execute on function public.set_up_leave_year(int) to authenticated;
+grant execute on function public.working_days(date, date) to authenticated;

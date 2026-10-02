@@ -82,6 +82,7 @@ export const ROUTES: RouteDef[] = [
   { path: '/assets', title: 'Asset register', roles: [...OD, 'accountant', 'admin', 'project_lead'], phase: 'C', nav: 'Records' },
   { path: '/assets/:tag', title: 'Asset', roles: [...OD, 'accountant', 'admin', 'project_lead'], phase: 'C' },
   { path: '/compliance', title: 'Compliance documents', roles: [...OD, 'accountant', 'admin', 'project_lead'], phase: 'C', nav: 'Records' },
+  { path: '/close', title: 'Month close', roles: [...OD, 'accountant', 'admin'], phase: 'A', nav: 'Money' },
   { path: '/close/:month', title: 'Month close', roles: [...OD, 'accountant', 'admin'], phase: 'A' },
   { path: '/import', title: 'Import and export', roles: ['owner', 'director', 'accountant', 'admin', 'project_lead'], phase: 'A', nav: 'Admin' },
   { path: '/settings', title: 'Settings', roles: ['owner', 'accountant'], phase: 'A', nav: 'Admin' },

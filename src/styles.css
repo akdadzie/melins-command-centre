@@ -240,3 +240,5 @@ dl.facts { display: grid; grid-template-columns: minmax(8rem, max-content) 1fr; 
 dl.facts dt { color: var(--muted); font-size: .85rem; }
 dl.facts dd { margin: 0; }
 a.button-link { display: inline-flex; align-items: center; text-decoration: none; }
+details { margin: .35rem 0; }
+details summary { cursor: pointer; min-height: 32px; }

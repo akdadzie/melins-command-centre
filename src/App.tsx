@@ -12,6 +12,7 @@ import { NewReceiptFromStatement, ReceiptsPage } from './features/receipts/Recei
 import { MyPayslips, PayrollPage, PayrollRunPage, PayslipView } from './features/payroll/PayrollPages'
 import { TimesheetApprovalsPage, TimesheetPage } from './features/timesheet/TimesheetPage'
 import { AccountDetail, AccountsPage, ReconciliationsPage } from './features/accounts/AccountsPages'
+import { CloseRedirect, MonthClosePage } from './features/close/MonthClosePage'
 import { JobDetail } from './features/jobs/JobDetail'
 import { LeaveBalancesPage, LeaveCalendarPage, LeaveRequestsPage, MyLeavePage } from './features/leave/LeavePages'
 import { ExpensesPage, PaymentsOutPage, StaffPaymentsPage, StatutoryPage } from './features/payouts/PayoutPages'
@@ -52,6 +53,8 @@ const SCREENS: Record<string, () => ReactNode> = {
   '/tax/statutory': () => <StatutoryPage />,
   '/directors': () => <ResourceList resource={R.directorTransactions} />,
   '/jobs/:number': () => <JobDetail />,
+  '/close': () => <CloseRedirect />,
+  '/close/:month': () => <MonthClosePage />,
   '/me/leave': () => <MyLeavePage />,
   '/leave': () => <LeaveRequestsPage />,
   '/leave/calendar': () => <LeaveCalendarPage />,
