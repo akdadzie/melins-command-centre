@@ -13,10 +13,10 @@ Every decision, assumption and change made during the build goes here. Read this
 
 | Item | State |
 |---|---|
-| Current phase | **Phase A: screens** (2 Oct 2026). Migrations through 1100 are applied to staging; the Owner is signed in with 2FA. **1200 to 1600 are waiting to be pushed.** Built: sign-in and recovery, forms and CSV import/export, Users, invoices, payments received (with the Owner's backup confirmation), payments out, claim approvals, payroll import and payslips, the mobile timesheet and approvals, leave, job detail, accounts and reconciliation, month close with the review queue, home screens for every role, the monthly summary, notifications, reminders and the email sender. **Next:** the remaining Phase A screens (ready to invoice, retention, credit notes/disputes/write-offs, VAT workings, client, referrer and director detail, team workload), then Settings with the setup wizard (company and tax details, tax codes, statutory calendar), document uploads, the weekly backup, the NSP import last (D-030), and the acceptance run on staging. |
+| Current phase | **Phase A: screens** (2 Oct 2026). Migrations through 1600 are applied to staging (checked 2 Oct 2026, with all three Edge Functions deployed and both reminder schedules active). **1700 (documents) is waiting to be pushed.** Built: every Phase A route (no placeholders left), Settings with the setup wizard, document uploads, reminders and email sender, and the weekly backup. **Next:** the NSP import (D-030, waiting for the sheet layout), then the Phase A acceptance run on staging and the production deploy. |
 | Brief | PROJECT_BRIEF.md = `MeLiNS_Command_Centre_Build_Prompt_v2.txt`, revision 2.4 (28 Sep 2026), copied unchanged |
 | Repository | https://github.com/akdadzie/melins-command-centre (private); local folder `C:\dev\melins-ims` |
-| Waiting on Owner | Push migrations 1200 to 1600 and deploy `reset-mfa`, `invite-user` and `send-emails` (`docs/SETUP_INFRA.md` §9); add a backup authenticator (`docs/ACCESS_RECOVERY.md`); SMTP/DNS setup, then the email schedule (§10); the NSP sheet layout (D-030); the December bonus layout before November (D-031); statement samples; user email list; leave defaults (A-038) |
+| Waiting on Owner | Push migration 1700 (`docs/SETUP_INFRA.md` §9); set up the weekly backup (`docs/BACKUP_RESTORE.md`); work through the setup wizard on staging; add a backup authenticator (`docs/ACCESS_RECOVERY.md`); SMTP/DNS setup, then the email schedule (§10); the NSP sheet layout (D-030); the December bonus layout before November (D-031); statement samples; user email list; leave defaults (A-038) |
 
 ---
 
@@ -166,7 +166,7 @@ It is modelled as Tier 3 (employee and employer), with a dated rate setting defa
 
 **A-014: Directors' monthly summary page (`/reports/monthly`) is in Phase A.**
 
-**A-015: Weekly backup runner.** A scheduled GitHub Actions workflow (only the runner; nothing is committed) runs `pg_dump` plus one CSV per table against production. It uploads to the restricted Google Drive folder (D-009) through a Google service account, which has access to that folder only. The DB connection string and service-account key are stored as GitHub Actions secrets. The details will be confirmed with the Owner when the backup task is built.
+**A-015: Weekly backup runner.** A scheduled GitHub Actions workflow (only the runner; nothing is committed) runs `pg_dump` plus one CSV per table against production, and uploads to the restricted Google Drive folder (D-009). *Amended by A-046 (2 Oct 2026):* it uploads with rclone and a Drive sign-in token instead of a Google service account, because a service account can't store files in a personal Drive folder (only in a Workspace Shared Drive).
 
 **A-016: Sensitive files never go in git.** `*.xlsx`, `*.xls`, `*.csv` at the repo root, and everything under `private/` are git-ignored. The payroll workbook stays local. Statement samples go in `private/`.
 
@@ -326,6 +326,47 @@ Forms and CSV import share one parser (`coerce.ts`), so any row that imports is 
 - **Go-live:** nothing dated before 1 Oct 2026 is chased (D-029).
 - **Email:** in-app first. Approvals, overdue items, reminders and "payslip ready" are also emailed by the `send-emails` function every 10 minutes, from noreply@themelins.com through cPanel on port 465 (setup: docs/SETUP_INFRA.md §10). It can't be tested until SMTP is set up.
 - **Phase B and C reminders** (advances, BD fees, trips, leads and referrers, compliance documents and bonds, assets, commitments, overheads) come with those phases.
+
+### Remaining Phase A screens, 2 Oct 2026
+
+**A-043: Invoice work lists and payments to directors.**
+- **Ready to invoice** groups items by job. Ticking items drafts one invoice per job, with milestone and rechargeable lines and a chosen tax code (Standard by default). The Owner then approves it as usual.
+- **Retention** lists what each client holds and its release date (highlighted within 30 days). "Draft release invoice" creates a retention-release line for the amount held, with no tax.
+- **Adjustments** lists credit notes, disputed invoices and write-offs. Each is still raised from its invoice.
+- Admin sees per-item amounts on these lists but never totals (A-019).
+- **Payments to directors had no screen.** It's now on each director's page and at `/directors/payments`, where approval notifications already pointed. The Owner or Accountant prepares a payment, the Owner approves it, and then it's paid. Tax on fees and dividends is taken at the Settings rate (acceptance 24). A dividend needs its board resolution attached before approval.
+
+**A-044: Settings and the setup wizard.**
+- **Dated settings.** Settings are saved with an effective date. If a version already starts on that date it's updated; otherwise a new version is added, copied from the one in force then. Earlier records keep their values. The wizard saves from go-live (1 Oct 2026); the general form defaults to today.
+- **The wizard** follows brief §10's order. Each step shows done or not done, and the Owner's home shows progress until all are done:
+  1. Company and tax details.
+  2. Accounts and opening balances (D-029).
+  3. Tax codes. The Accountant confirms each version.
+  4. Opening statutory arrears by type.
+  5. WHT rates. Per diem rates come with trips in Phase B.
+  6. Bonus rule and leave settings.
+  7. Users.
+- **Nothing is guessed.** Tax rates start blank: the wizard offers NHIL, GETFund and VAT as names, with empty rates.
+- **Statutory calendar.** The Owner or the Accountant edits each obligation's payee and due rule.
+
+**A-045: Documents.**
+- **Storage.** One private Storage bucket, `documents`. A file is stored at `<table>/<record id>/<time>-<name>`, and **anyone who can read the record can open the file**. The record's own RLS decides, so:
+  - leave documents are seen only by the person, their approver and finance;
+  - statements are seen only by finance.
+- **Limits.** Directors can't upload. Only the uploader or the Owner can delete. Files are limited to 10 MB (PDF, images, CSV), and are opened through 2-minute signed links.
+- **Where attachments appear:** expenses (receipt), receipts (cheque, deposit slip or remittance advice), every money-out payment, director entries and payments (board resolutions for dividends), transfers, WHT certificates, contracts, leave requests, and statement uploads (the original CSV).
+- **Not attached here:** payroll source sheets are read in the browser and not kept, and payslips are printed from the app.
+
+**A-046: Weekly backup (replaces the details of A-015).**
+- **What it holds.** Every Sunday 02:00, GitHub Actions exports production through the Session pooler and builds one archive, encrypted with a passphrase the Owner keeps offline. Inside:
+  - a data-only dump (`data.sql`);
+  - the logins (`auth.sql`: users, identities and authenticators, so a restore keeps everyone's access);
+  - a full dump for reading (`melins.sql`);
+  - a CSV per table;
+  - a manifest of row counts.
+- **Where it goes.** rclone uploads it to the Drive folder, and copies new Storage documents across (copy, never sync, so nothing is deleted; records are kept 6+ years).
+- **Restoring.** `scripts/backup/restore.sh` loads a backup into a project built from the migrations, with triggers off, so balances, numbers and the audit log come back exactly. It then checks every table's count against the manifest.
+- **Tested locally on 2 Oct 2026:** backup, decrypt, restore into a fresh database, all 68 tables matched, and balances, receivables and logins were identical. It hasn't yet run on GitHub or Supabase. Set-up and restore steps are in docs/BACKUP_RESTORE.md.
 
 ---
 

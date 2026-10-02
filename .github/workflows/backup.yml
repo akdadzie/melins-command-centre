@@ -1,0 +1,90 @@
+# Weekly full export of production (brief §3 Backups; D-009, A-015, A-046).
+# Sundays 02:00 Accra (UTC). Uploads an encrypted archive to the restricted
+# Google Drive folder, and copies new documents from Storage. Nothing is
+# committed. Set-up and restore: docs/BACKUP_RESTORE.md.
+#
+# Repository secrets (Settings > Secrets and variables > Actions):
+#   BACKUP_DB_URL          production Session pooler connection string (port 5432)
+#   BACKUP_PASSPHRASE      encrypts the archive; also kept offline by the Owner
+#   RCLONE_DRIVE_TOKEN     Google Drive sign-in token from `rclone authorize "drive"`
+#   GDRIVE_FOLDER_ID       the backup folder's id (the end of its Drive URL)
+# Optional, to copy documents too (Storage > S3 access keys):
+#   SUPABASE_S3_ENDPOINT, SUPABASE_S3_REGION, SUPABASE_S3_KEY_ID, SUPABASE_S3_SECRET
+name: Weekly backup
+
+on:
+  schedule:
+    - cron: '0 2 * * 0'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      RCLONE_CONFIG_GDRIVE_TYPE: drive
+      RCLONE_CONFIG_GDRIVE_SCOPE: drive
+      RCLONE_CONFIG_GDRIVE_TOKEN: ${{ secrets.RCLONE_DRIVE_TOKEN }}
+      RCLONE_CONFIG_GDRIVE_ROOT_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the secrets are set
+        env:
+          BACKUP_DB_URL: ${{ secrets.BACKUP_DB_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          missing=""
+          [ -n "$BACKUP_DB_URL" ] || missing="$missing BACKUP_DB_URL"
+          [ -n "$BACKUP_PASSPHRASE" ] || missing="$missing BACKUP_PASSPHRASE"
+          [ -n "$RCLONE_CONFIG_GDRIVE_TOKEN" ] || missing="$missing RCLONE_DRIVE_TOKEN"
+          [ -n "$RCLONE_CONFIG_GDRIVE_ROOT_FOLDER_ID" ] || missing="$missing GDRIVE_FOLDER_ID"
+          if [ -n "$missing" ]; then echo "::error::Missing secrets:$missing (docs/BACKUP_RESTORE.md)"; exit 1; fi
+
+      - name: Install PostgreSQL 17 client and rclone
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
+            | sudo tee /etc/apt/sources.list.d/pgdg.list >/dev/null
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-17 rclone
+          pg_dump --version
+
+      - name: Export
+        id: export
+        env:
+          BACKUP_DB_URL: ${{ secrets.BACKUP_DB_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+          OUT_DIR: backup-out
+        run: echo "file=$(bash scripts/backup/backup.sh | tail -1)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload to Google Drive
+        run: |
+          rclone copy "${{ steps.export.outputs.file }}" gdrive:database --stats-one-line -v
+          rclone lsl gdrive:database --max-depth 1 | sort -k2 | tail -3
+
+      - name: Copy documents from Storage
+        env:
+          RCLONE_CONFIG_SUPA_TYPE: s3
+          RCLONE_CONFIG_SUPA_PROVIDER: Other
+          RCLONE_CONFIG_SUPA_ENDPOINT: ${{ secrets.SUPABASE_S3_ENDPOINT }}
+          RCLONE_CONFIG_SUPA_REGION: ${{ secrets.SUPABASE_S3_REGION }}
+          RCLONE_CONFIG_SUPA_ACCESS_KEY_ID: ${{ secrets.SUPABASE_S3_KEY_ID }}
+          RCLONE_CONFIG_SUPA_SECRET_ACCESS_KEY: ${{ secrets.SUPABASE_S3_SECRET }}
+          RCLONE_CONFIG_SUPA_FORCE_PATH_STYLE: 'true'
+        run: |
+          if [ -z "$RCLONE_CONFIG_SUPA_ENDPOINT" ]; then echo "Storage keys not set: documents not copied."; exit 0; fi
+          # copy, never sync: a file deleted in the app stays in the backup (records kept 6 years).
+          rclone copy supa:documents gdrive:documents --stats-one-line -v
+
+      - name: Remove the local archive
+        if: always()
+        run: rm -rf backup-out

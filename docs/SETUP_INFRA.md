@@ -96,8 +96,8 @@ Netlify → **Site configuration → Build & deploy → Continuous deployment �
 - Branch deploys: **"Let me add individual branches"** → `staging`
 - Build command and publish directory come from `netlify.toml` in the repo (added with the front-end scaffold).
 
-## 8. Google Drive backup folder (needed later, for the backup task)
-Create a folder such as **"MeLiNS Command Centre – Backups"**, shared only with you and the Accountant. I'll give the service-account steps when the backup job is built (DECISIONS A-015).
+## 8. Weekly backup to Google Drive
+Follow **docs/BACKUP_RESTORE.md** (DECISIONS A-046): create the restricted Drive folder, a Drive sign-in token, the backup passphrase (kept offline), and four GitHub secrets, then run the workflow once by hand.
 
 ## 9. First sign-in on staging (and later production)
 Do these once per environment, in this order:
