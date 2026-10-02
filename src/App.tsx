@@ -8,6 +8,7 @@ import { ImportExportPage } from './pages/ImportExportPage'
 import { MyProfile } from './pages/MyProfile'
 import { InvoiceDetail } from './features/invoices/InvoiceDetail'
 import { InvoicesPage } from './features/invoices/InvoicesPage'
+import { ClientDetail, DirectorDetail, DirectorPaymentsPage, DirectorsPage, ReferrerDetail } from './features/records/DetailPages'
 import { VatWorkingsPage } from './features/tax/VatWorkingsPage'
 import { AdjustmentsPage, ReadyToInvoicePage, RetentionPage } from './features/invoices/InvoiceListsPages'
 import { NewReceiptFromStatement, ReceiptsPage } from './features/receipts/ReceiptsPage'
@@ -61,7 +62,11 @@ const SCREENS: Record<string, () => ReactNode> = {
   '/expenses/recurring': () => <ResourceList resource={R.recurringExpenses} />,
   '/staff-loans': () => <ResourceList resource={R.staffLoans} />,
   '/tax/statutory': () => <StatutoryPage />,
-  '/directors': () => <ResourceList resource={R.directorTransactions} />,
+  '/directors': () => <DirectorsPage />,
+  '/directors/payments': () => <DirectorPaymentsPage />,
+  '/directors/:id': () => <DirectorDetail />,
+  '/clients/:id': () => <ClientDetail />,
+  '/referrers/:id': () => <ReferrerDetail />,
   '/jobs/:number': () => <JobDetail />,
   '/close': () => <CloseRedirect />,
   '/close/:month': () => <MonthClosePage />,

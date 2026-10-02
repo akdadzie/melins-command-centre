@@ -44,6 +44,7 @@ export const ROUTES: RouteDef[] = [
   { path: '/payroll', title: 'Payroll runs', roles: [...OD, 'accountant'], phase: 'A', nav: 'Money' },
   { path: '/payroll/:month', title: 'Payroll run', roles: [...OD, 'accountant'], phase: 'A' },
   { path: '/directors', title: "Directors' current accounts", roles: [...OD, 'accountant'], phase: 'A', nav: 'Money' },
+  { path: '/directors/payments', title: 'Payments to directors', roles: [...OD, 'accountant'], phase: 'A' },
   { path: '/directors/:id', title: "Director's current account", roles: [...OD, 'accountant'], phase: 'A' },
   { path: '/tax/statutory', title: 'Tax and statutory ledger', roles: [...OD, 'accountant'], phase: 'A', nav: 'Money' },
   { path: '/tax/vat/:month', title: 'VAT workings', roles: [...OD, 'accountant'], phase: 'A' },

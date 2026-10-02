@@ -16,6 +16,7 @@ const METHODS = opts([['bank_transfer', 'Bank transfer'], ['cheque', 'Cheque'], 
 export const clients: ResourceDef = {
   key: 'clients', table: 'clients', title: 'Clients', singular: 'Client',
   orderBy: { column: 'name' },
+  rowLink: (r) => `/clients/${r.id}`,
   readRoles: [O, D, AC, AD, PL], createRoles: [O, AC, AD, PL], editRoles: [O, AC, AD, PL], importRoles: [O, AC, AD],
   fields: [
     { name: 'name', label: 'Name', type: 'text', required: true, list: true },
@@ -39,6 +40,7 @@ export const referrers: ResourceDef = {
   key: 'referrers', table: 'referrers', title: 'Referrers and contacts', singular: 'Referrer',
   description: 'Who sends work to MeLiNS (D-012). Contact log and BD fees arrive in Phase B.',
   orderBy: { column: 'name' },
+  rowLink: (r) => `/referrers/${r.id}`,
   readRoles: [O, D, AC, AD, PL], createRoles: [O, AC, AD, PL], editRoles: [O, AC, AD, PL], importRoles: [O, AC, AD],
   fields: [
     { name: 'name', label: 'Name', type: 'text', required: true, list: true },
