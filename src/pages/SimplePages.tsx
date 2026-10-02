@@ -7,7 +7,6 @@ import { supabase } from '../lib/supabase'
 import { ResourceList } from '../resources/ResourceList'
 import * as R from '../resources/definitions'
 import type { ResourceDef } from '../resources/types'
-import { UsersPanel } from './UsersPanel'
 
 /** Tabs of resource lists (Settings, Staff). */
 export function ResourceTabs({ tabs }: { tabs: ResourceDef[] }) {
@@ -24,29 +23,6 @@ export function ResourceTabs({ tabs }: { tabs: ResourceDef[] }) {
       </div>
       {current && <ResourceList key={current.key} resource={current} />}
     </>
-  )
-}
-
-export function SettingsPage() {
-  const { role } = useAuth()
-  const tabs = role === 'accountant'
-    ? [R.whtRates, R.publicHolidays, R.statutoryLines, R.accounts, R.expenseCategories]
-    : [R.accounts, R.whtRates, R.expenseCategories, R.jobTypes, R.leaveTypes, R.leaveEntitlements, R.publicHolidays]
-  const [tab, setTab] = useState<'users' | 'data'>(role === 'owner' ? 'users' : 'data')
-  return (
-    <section>
-      <header className="page-header"><div>
-        <h1>Settings</h1>
-        <p className="muted">Company details, tax codes, the statutory calendar and the setup wizard arrive with the next build step.</p>
-      </div></header>
-      {role === 'owner' && (
-        <div className="tabs" role="tablist">
-          <button role="tab" aria-selected={tab === 'users'} onClick={() => setTab('users')}>Users</button>
-          <button role="tab" aria-selected={tab === 'data'} onClick={() => setTab('data')}>Reference data</button>
-        </div>
-      )}
-      {tab === 'users' && role === 'owner' ? <UsersPanel /> : <ResourceTabs tabs={tabs} />}
-    </section>
   )
 }
 

@@ -14,6 +14,7 @@ import { Money, StatusBadge } from '../../components/ui'
 import { formatDate, formatMoney, todayAccra } from '../../lib/format'
 import { defaultCloseMonth, GO_LIVE_MONTH } from '../../lib/golive'
 import { supabase } from '../../lib/supabase'
+import { useSetupStatus } from '../settings/SettingsPages'
 
 // ---------------------------------------------------------------------------
 // Dates
@@ -283,9 +284,20 @@ function Greeting({ children }: { children?: ReactNode }) {
   )
 }
 
+function SetupBanner() {
+  const { data: s } = useSetupStatus()
+  if (!s) return null
+  const steps = [s.company, s.accounts, s.taxCodes, s.arrears, s.wht, s.bonus, s.users]
+  const done = steps.filter(Boolean).length
+  if (done === steps.length) return null
+  return <p className="notice form-ok" style={{ maxWidth: 'none' }}><strong>Setup: {done} of {steps.length} steps done.</strong>{' '}
+    <Link to="/settings?tab=setup">Finish setting up</Link> (company and tax details, accounts, tax codes, arrears, WHT rates, bonus rule, users).</p>
+}
+
 function OwnerHome() {
   return (
     <section>
+      <SetupBanner />
       <Greeting>
         <Link className="button-link primary-link" to="/receipts?new=quick">+ Payment received</Link>
         <Link className="button-link" to="/timesheet">Log time</Link>
