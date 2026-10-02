@@ -6,7 +6,7 @@ const TONES: Record<string, 'neutral' | 'info' | 'warn' | 'ok' | 'bad'> = {
   draft: 'neutral', prepared: 'neutral', imported: 'neutral', submitted: 'info', requested: 'info', recorded: 'info',
   reported: 'warn', approved: 'info', sent: 'info', part_paid: 'warn', disputed: 'bad', returned: 'bad', queried: 'bad',
   paid: 'ok', confirmed: 'ok', reviewed: 'ok', issued: 'ok', reimbursed: 'ok', received: 'ok', claimed: 'ok',
-  written_off: 'bad', rejected: 'bad', cancelled: 'neutral', expected: 'warn', overdue: 'bad', due: 'info',
+  written_off: 'bad', rejected: 'bad', declined: 'bad', taken: 'ok', cancelled: 'neutral', expected: 'warn', overdue: 'bad', due: 'info',
 }
 
 export function StatusBadge({ status, label }: { status: string | null | undefined; label?: string }) {

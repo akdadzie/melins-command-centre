@@ -6292,6 +6292,7 @@ export type Database = {
         Args: { p_checklist: Json; p_complete?: boolean; p_month: string }
         Returns: undefined
       }
+      set_up_leave_year: { Args: { p_year: number }; Returns: number }
       timesheet_compliance: {
         Args: { p_from: string; p_to?: string }
         Returns: {
@@ -6327,6 +6328,7 @@ export type Database = {
           withheld_by_clients: number
         }[]
       }
+      working_days: { Args: { p_end: string; p_start: string }; Returns: number }
     }
     Enums: {
       app_role:

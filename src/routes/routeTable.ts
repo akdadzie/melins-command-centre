@@ -50,7 +50,7 @@ export const ROUTES: RouteDef[] = [
 
   { path: '/me/payslips', title: 'My payslips', roles: ALL, phase: 'A' },
   { path: '/me/payslips/:id', title: 'Payslip', roles: ALL, phase: 'A' },
-  { path: '/me/leave', title: 'My leave', roles: ['owner', 'accountant', 'admin', 'project_lead', 'staff'], phase: 'A' },
+  { path: '/me/leave', title: 'My leave', roles: ['owner', 'accountant', 'admin', 'project_lead', 'staff'], phase: 'A', nav: 'People' },
   { path: '/leave', title: 'Leave requests', roles: [...OD, 'accountant', 'project_lead'], phase: 'A', nav: 'People' },
   { path: '/leave/calendar', title: 'Leave calendar', roles: ALL, phase: 'A', nav: 'People' },
   { path: '/leave/balances', title: 'Leave balances', roles: [...OD, 'accountant', 'project_lead'], phase: 'A', nav: 'People' },

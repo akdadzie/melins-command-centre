@@ -276,6 +276,18 @@ Forms and CSV import share one parser (`coerce.ts`), so any row that imports is 
 - The Owner resets anyone else's from Settings > Users. That needs a reason, signs the person out everywhere, and is recorded in the audit log.
 - The Owner's own reset is `app.reset_mfa()` in the Supabase SQL editor, also audit-logged. The Supabase dashboard account (with its recovery codes stored offline) is the last line of recovery.
 
+### Screens, 2 Oct 2026
+
+**A-038: Leave screens.**
+- **Leave year.** The screens treat the leave year as the calendar year (the Settings default). If the Owner changes the leave year's start month, the database's balances stay right, but the screens' default year needs a small change.
+- **Setting up a year** (Owner, `/leave/balances`):
+  - Everyone gets each leave type's default days, pro-rated by the days they're employed in the year and rounded to the nearest half day.
+  - Unused annual leave carries over up to the Settings limit. If no limit is set, nothing carries over.
+  - It never changes an existing entitlement, so it can be re-run for new joiners. Individual figures (e.g. national service postings) are edited on the Entitlements tab.
+  - Default days are blank until the Owner sets them (brief §7.3: at or above the statutory minimum, confirmed with the Accountant). For October 2026, set up 2026 and adjust each person's days to what's left of their year.
+- **Overdrawn annual leave.** The Owner can approve it. The Project lead can only approve it as Unpaid leave, which changes the type and records why in the decision note.
+- **Supporting documents.** A request whose type needs one is flagged to the approver. Uploading it comes with document storage, like other attachments.
+
 ---
 
 ## Findings from the payroll workbook (28 Sep 2026)

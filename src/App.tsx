@@ -11,6 +11,7 @@ import { InvoicesPage } from './features/invoices/InvoicesPage'
 import { NewReceiptFromStatement, ReceiptsPage } from './features/receipts/ReceiptsPage'
 import { MyPayslips, PayrollPage, PayrollRunPage, PayslipView } from './features/payroll/PayrollPages'
 import { TimesheetApprovalsPage, TimesheetPage } from './features/timesheet/TimesheetPage'
+import { LeaveBalancesPage, LeaveCalendarPage, LeaveRequestsPage, MyLeavePage } from './features/leave/LeavePages'
 import { ExpensesPage, PaymentsOutPage, StaffPaymentsPage, StatutoryPage } from './features/payouts/PayoutPages'
 import { Home, MyJobs, SettingsPage, StaffPage } from './pages/SimplePages'
 import * as R from './resources/definitions'
@@ -46,7 +47,10 @@ const SCREENS: Record<string, () => ReactNode> = {
   '/staff-loans': () => <ResourceList resource={R.staffLoans} />,
   '/tax/statutory': () => <StatutoryPage />,
   '/directors': () => <ResourceList resource={R.directorTransactions} />,
-  '/leave/balances': () => <ResourceList resource={R.leaveEntitlements} />,
+  '/me/leave': () => <MyLeavePage />,
+  '/leave': () => <LeaveRequestsPage />,
+  '/leave/calendar': () => <LeaveCalendarPage />,
+  '/leave/balances': () => <LeaveBalancesPage />,
   '/team/staff': () => <StaffPage />,
 }
 
