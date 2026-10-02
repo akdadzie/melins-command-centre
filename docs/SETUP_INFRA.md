@@ -102,7 +102,7 @@ Create a folder such as **"MeLiNS Command Centre – Backups"**, shared only wit
 ## 9. First sign-in on staging (and later production)
 Do these once per environment, in this order:
 1. **Apply the latest migrations.** In `C:\dev\melins-ims`, run `npx supabase db push` (while linked to staging).
-2. **Deploy the Edge Functions.** Run `npx supabase functions deploy invite-user` and `npx supabase functions deploy reset-mfa`. Supabase gives them the service-role key automatically, and nothing is stored in the repo.
+2. **Deploy the Edge Functions.** Run `npx supabase functions deploy invite-user`, `npx supabase functions deploy reset-mfa` and `npx supabase functions deploy send-emails`. Supabase gives them the service-role key automatically, and nothing is stored in the repo. (`send-emails` needs the email set-up in §10 before it sends anything.)
 3. **Invite yourself.** Supabase dashboard → **Authentication → Users → Invite user**, with your email.
 4. **Make that log-in the Owner.** Supabase dashboard → **SQL Editor** → run:
    ```sql
@@ -114,3 +114,33 @@ Do these once per environment, in this order:
 To run the app on this PC against staging:
 1. Put the staging **anon / publishable key** in `.env.local` next to `VITE_SUPABASE_URL=https://cipklttzbvbsivzrkcvq.supabase.co`.
 2. Run `npm run dev` and open http://localhost:5173.
+
+## 10. Reminders and notification emails
+**Reminders** run inside the database (migration 1600, DECISIONS A-042): every day at 06:00 and at 17:00 on working days. The migration switches on **pg_cron** and schedules both. To check: Supabase → **Integrations → Cron** should list `melins-daily-reminders` and `melins-timesheet-nudge`. If they're missing, enable **pg_cron** under **Database → Extensions** and run `npx supabase db push` again.
+
+**Emails.** Notifications that need attention (approvals, overdue items, reminders, payslip ready) are also emailed by the `send-emails` function, every 10 minutes. It sends from `noreply@themelins.com` through cPanel, so finish §4 first. Do this once per project (staging, then production):
+
+1. **Give the function its settings.** In `C:\dev\melins-ims`, create a file named `.env.mailer` (git ignores `.env.*`, so it's never committed) containing:
+   ```
+   SMTP_HOST=<cPanel outgoing server>
+   SMTP_PORT=465
+   SMTP_USER=noreply@themelins.com
+   SMTP_PASS=<mailbox password>
+   APP_URL=https://app.themelins.com
+   APP_ENV=production
+   MAILER_SECRET=<a long random string>
+   ```
+   On staging, use `APP_URL=https://staging--<site>.netlify.app` and `APP_ENV=staging` (emails then start with "[STAGING]"). Port **465** is required: Supabase functions can't send on 25 or 587. Linked to the project, run `npx supabase secrets set --env-file .env.mailer`, then delete the file. Never paste these values into chat.
+2. **Deploy it:** `npx supabase functions deploy send-emails`. (`supabase/config.toml` already turns off JWT checks for this function; it checks `MAILER_SECRET` instead.)
+3. **Schedule it.** Supabase → **Database → Extensions**: enable **pg_net**. Then in the **SQL Editor**, run this with the same random string as `MAILER_SECRET` and your project ref:
+   ```sql
+   select vault.create_secret('<the same long random string>', 'mailer_secret');
+   select cron.schedule('melins-send-emails', '*/10 * * * *', $$
+     select net.http_post(
+       url := 'https://<project-ref>.supabase.co/functions/v1/send-emails',
+       headers := jsonb_build_object('Content-Type', 'application/json', 'x-mailer-secret',
+         (select decrypted_secret from vault.decrypted_secrets where name = 'mailer_secret')),
+       body := '{}'::jsonb)
+   $$);
+   ```
+4. **Test it.** Do something that sends an email (for example, on staging record leave for someone whose approver has a log-in; the approver is emailed), wait up to 10 minutes, and check the inbox and spam folder. Supabase → **Edge Functions → send-emails → Logs** shows each run and any SMTP error.

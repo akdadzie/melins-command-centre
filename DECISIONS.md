@@ -13,10 +13,10 @@ Every decision, assumption and change made during the build goes here. Read this
 
 | Item | State |
 |---|---|
-| Current phase | **Phase A: screens** (29 Sep 2026). Migrations through 1100 are applied to staging; the Owner is signed in with 2FA. 1200 (2FA recovery) is waiting to be pushed. Built: sign-in and recovery, forms and CSV import/export, Users, invoices, payments received, payments out (supplier, staff, statutory), claim approvals, payroll import and payslips, the mobile timesheet and approvals. Next: leave screens, jobs detail, accounts and reconciliation, month close, then the home screens and reminders. |
+| Current phase | **Phase A: screens** (2 Oct 2026). Migrations through 1100 are applied to staging; the Owner is signed in with 2FA. **1200 to 1600 are waiting to be pushed.** Built: sign-in and recovery, forms and CSV import/export, Users, invoices, payments received (with the Owner's backup confirmation), payments out, claim approvals, payroll import and payslips, the mobile timesheet and approvals, leave, job detail, accounts and reconciliation, month close with the review queue, home screens for every role, the monthly summary, notifications, reminders and the email sender. **Next:** the remaining Phase A screens (ready to invoice, retention, credit notes/disputes/write-offs, VAT workings, client, referrer and director detail, team workload), then Settings with the setup wizard (company and tax details, tax codes, statutory calendar), document uploads, the weekly backup, the NSP import last (D-030), and the acceptance run on staging. |
 | Brief | PROJECT_BRIEF.md = `MeLiNS_Command_Centre_Build_Prompt_v2.txt`, revision 2.4 (28 Sep 2026), copied unchanged |
 | Repository | https://github.com/akdadzie/melins-command-centre (private); local folder `C:\dev\melins-ims` |
-| Waiting on Owner | Push migration 1200 and deploy `reset-mfa` and `invite-user` (`docs/SETUP_INFRA.md` §9); add a backup authenticator (`docs/ACCESS_RECOVERY.md`); confirm the NSP sheet's column layout; SMTP/DNS setup; statement samples; user email list |
+| Waiting on Owner | Push migrations 1200 to 1600 and deploy `reset-mfa`, `invite-user` and `send-emails` (`docs/SETUP_INFRA.md` §9); add a backup authenticator (`docs/ACCESS_RECOVERY.md`); SMTP/DNS setup, then the email schedule (§10); the NSP sheet layout (D-030); the December bonus layout before November (D-031); statement samples; user email list; leave defaults (A-038) |
 
 ---
 
@@ -310,6 +310,22 @@ Forms and CSV import share one parser (`coerce.ts`), so any row that imports is 
 - **Delivery panel (basic, Phase A):** jobs past due or over an hours budget, utilisation for this month and the last 3, who is away this week and next, entries and leave awaiting approval, and days not logged last week.
 - Pipeline, trips, tasks, valuations, commitments and overheads show a "Phase B/C" note (A-010).
 - `/reports/monthly` shows the month's fees, costs, cash and tax, and whether it's closed. `/notifications` lists the user's notifications; the bell shows the unread count.
+
+**A-042: Reminders and emails (brief §9).**
+- **Two routines run in the database** (pg_cron; Accra is UTC+0): every day at 06:00, and at 17:00 on working days. Each reminder is sent once (it has a key), so a routine can be re-run safely. Each one links to its record.
+- **Daily at 06:00:**
+  - **Statutory:** to the Accountant and the Owner 7 days before, on the due date, and the day after.
+  - **Invoices:** chase reminders to Admin 7 days before due, on the due date, and 14, 30 and 60 days overdue, each with a polite reminder ready to send.
+  - **Reported payments:** to Admin daily while details are missing; to the Owner if still unconfirmed after 14 days. Client money a director has held over 7 days goes to the Owner.
+  - **Milestones:** to the Project lead when one is past target and not marked; to Admin and the Owner when one is reached and not invoiced within 5 working days. Retention is flagged 30 days before release.
+  - **Admin's records:** recurring drafts created on their due dates, and drafts unconfirmed after 5 days. WHT certificates not received by their expected date.
+  - **Leave:** the approver after 2 working days; in October, staff with unused annual leave above the carry-over limit.
+  - **Payroll:** the Accountant on the 15th and 20th if the month's run isn't imported; the Owner when an imported run is waiting; Admin on the 15th to check loan deductions.
+  - **Timesheets:** day 3, a final warning to the person; day 4, their approver (the Owner, for Francis and Admin); day 11, the Owner. On Mondays, approvers hear of entries waiting.
+- **At 17:00:** anyone with no time logged today. Approved leave fills the day, and public holidays aren't working days, so neither is reminded.
+- **Go-live:** nothing dated before 1 Oct 2026 is chased (D-029).
+- **Email:** in-app first. Approvals, overdue items, reminders and "payslip ready" are also emailed by the `send-emails` function every 10 minutes, from noreply@themelins.com through cPanel on port 465 (setup: docs/SETUP_INFRA.md §10). It can't be tested until SMTP is set up.
+- **Phase B and C reminders** (advances, BD fees, trips, leads and referrers, compliance documents and bonds, assets, commitments, overheads) come with those phases.
 
 ---
 

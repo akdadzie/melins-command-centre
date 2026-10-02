@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useSearchParams } from 'react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../../auth/AuthProvider'
 import { PromptDialog, StatusBadge, useAction, uuid } from '../../components/ui'
@@ -37,7 +38,12 @@ export function TimesheetPage() {
   const queue = useMemo(() => new TimesheetQueue(window.localStorage, `melins.timesheet.queue.${profile?.user_id}`), [profile?.user_id])
   const [queued, setQueued] = useState(() => queue.list())
   const [online, setOnline] = useState(navigator.onLine)
-  const [date, setDate] = useState(todayAccra())
+  const [params] = useSearchParams()
+  // Reminders link to /timesheet?date=YYYY-MM-DD (the missing day).
+  const [date, setDate] = useState(() => {
+    const d = params.get('date')
+    return d && /^\d{4}-\d{2}-\d{2}$/.test(d) && d <= todayAccra() ? d : todayAccra()
+  })
   const [forStaff, setForStaff] = useState(profile?.staff_id ?? '')
   const onBehalf = forStaff !== profile?.staff_id
 

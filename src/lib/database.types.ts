@@ -2521,6 +2521,7 @@ export type Database = {
           recipient_id: string
           record_id: string | null
           record_type: string | null
+          reminder_key: string | null
           send_email: boolean
           title: string
         }
@@ -2535,6 +2536,7 @@ export type Database = {
           recipient_id: string
           record_id?: string | null
           record_type?: string | null
+          reminder_key?: string | null
           send_email?: boolean
           title: string
         }
@@ -2549,6 +2551,7 @@ export type Database = {
           recipient_id?: string
           record_id?: string | null
           record_type?: string | null
+          reminder_key?: string | null
           send_email?: boolean
           title?: string
         }

@@ -21,6 +21,7 @@ The schema, RLS, triggers and reference data live in `supabase/migrations`, appl
 | `1300_owner_answers` | Cost to company = gross + employer SSNIT + employer PF (D-027); the Owner confirms payments as the Accountant's backup, reviewed by the Accountant before close (D-028) |
 | `1400_leave_screens` | `working_days()` for the request form; `set_up_leave_year()` (A-038) |
 | `1500_close_screens` | Admin sees only its own close blockers; `entries_to_review()` queue for the Accountant (A-040) |
+| `1600_reminders` | Daily and 17:00 reminder routines scheduled with pg_cron; reminders sent once each (A-042) |
 
 ## How it fits together
 
@@ -88,13 +89,13 @@ pg_ctl -D <dir> -o "-p 54329" start
 | `90_test_owner_answers.sql` | D-027, D-028 |
 | `91_test_leave_setup.sql` | 33, A-038 |
 | `92_test_close_screens.sql` | A-040 |
+| `93_test_reminders.sql` | brief §9, 31, A-042 |
 
 Items 1, 2 and 28 (domain and email, routes, CSV and backups) are tested at the front-end and infrastructure stage. The same acceptance tests are re-run on staging before production.
 
 ## Not in the schema yet (by design)
 
 - **Storage bucket policies** for receipts, certificates and payslip PDFs: added with the upload forms.
-- **Scheduled jobs:** recurring drafts, reminders, timesheet nudges.
 - **Statement parsers for GCB and MTN MoMo:** waiting for the samples (D-025).
 - **Payslip PDF Edge Function.**
 - **Phase B/C tables** (A-006).
