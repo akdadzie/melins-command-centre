@@ -30,7 +30,7 @@ code { background: var(--panel); padding: 0 .25rem; border-radius: 3px; word-bre
 .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 
 /* Controls */
-button, .tile {
+button, .tile, a.button-link {
   min-height: var(--tap); padding: 0 1rem; border: 1px solid var(--line); border-radius: var(--radius);
   background: var(--bg); color: var(--text); font: inherit; cursor: pointer;
 }
@@ -239,3 +239,4 @@ table.calendar .holiday { background: #e6effa; color: #1d4f91; }
 dl.facts { display: grid; grid-template-columns: minmax(8rem, max-content) 1fr; gap: .35rem 1rem; margin: 0; }
 dl.facts dt { color: var(--muted); font-size: .85rem; }
 dl.facts dd { margin: 0; }
+a.button-link { display: inline-flex; align-items: center; text-decoration: none; }

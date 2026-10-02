@@ -11,6 +11,7 @@ import { InvoicesPage } from './features/invoices/InvoicesPage'
 import { NewReceiptFromStatement, ReceiptsPage } from './features/receipts/ReceiptsPage'
 import { MyPayslips, PayrollPage, PayrollRunPage, PayslipView } from './features/payroll/PayrollPages'
 import { TimesheetApprovalsPage, TimesheetPage } from './features/timesheet/TimesheetPage'
+import { AccountDetail, AccountsPage, ReconciliationsPage } from './features/accounts/AccountsPages'
 import { JobDetail } from './features/jobs/JobDetail'
 import { LeaveBalancesPage, LeaveCalendarPage, LeaveRequestsPage, MyLeavePage } from './features/leave/LeavePages'
 import { ExpensesPage, PaymentsOutPage, StaffPaymentsPage, StatutoryPage } from './features/payouts/PayoutPages'
@@ -30,7 +31,9 @@ const SCREENS: Record<string, () => ReactNode> = {
   '/receipts/new': () => <NewReceiptFromStatement />,
   '/receipts/wht': () => <ResourceList resource={R.whtCertificates} />,
   '/settings': () => <SettingsPage />,
-  '/accounts': () => <ResourceList resource={R.accounts} />,
+  '/accounts': () => <AccountsPage />,
+  '/accounts/:id': () => <AccountDetail />,
+  '/accounts/reconciliations': () => <ReconciliationsPage />,
   '/accounts/transfers': () => <ResourceList resource={R.transfers} />,
   '/clients': () => <ResourceList resource={R.clients} />,
   '/referrers': () => <ResourceList resource={R.referrers} />,

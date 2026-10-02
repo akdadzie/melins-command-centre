@@ -288,6 +288,12 @@ Forms and CSV import share one parser (`coerce.ts`), so any row that imports is 
 - **Overdrawn annual leave.** The Owner can approve it. The Project lead can only approve it as Unpaid leave, which changes the type and records why in the decision note.
 - **Supporting documents.** A request whose type needs one is flagged to the approver. Uploading it comes with document storage, like other attachments.
 
+**A-039: Statements and reconciliation.**
+- **Reading statements.** Until the GCB and MTN MoMo samples arrive (D-025), the Accountant uploads any CSV export whose heading row has a date and either an amount or debit and credit columns. Account details above the headings are skipped, as are opening, closing and total rows. Dates are day-first only. The bank-specific readers replace this once the samples arrive.
+- **Checking a statement.** On upload, the screen checks that opening balance + lines = closing balance and warns if not. Lines outside the chosen period are left out.
+- **Matching.** A statement line is matched to a movement in the books (a confirmed receipt, an expense, a payment…). The screen suggests movements with the same amount within 7 days that aren't already matched. A line that isn't in the books is either explained, or (for money in) handed to Admin as a "Record this receipt" task, or recorded at once by the Accountant.
+- **Reconciling.** The month's reconciliation compares the statement's closing balance with the calculated balance at month end. It can't close while any statement line up to that date is unmatched, or while a difference is unexplained (acceptance 13). Movements in the books but not on the statement are listed for the Accountant to follow up.
+
 ---
 
 ## Findings from the payroll workbook (28 Sep 2026)
