@@ -8,6 +8,7 @@ import { ImportExportPage } from './pages/ImportExportPage'
 import { MyProfile } from './pages/MyProfile'
 import { InvoiceDetail } from './features/invoices/InvoiceDetail'
 import { InvoicesPage } from './features/invoices/InvoicesPage'
+import { VatWorkingsPage } from './features/tax/VatWorkingsPage'
 import { AdjustmentsPage, ReadyToInvoicePage, RetentionPage } from './features/invoices/InvoiceListsPages'
 import { NewReceiptFromStatement, ReceiptsPage } from './features/receipts/ReceiptsPage'
 import { MyPayslips, PayrollPage, PayrollRunPage, PayslipView } from './features/payroll/PayrollPages'
@@ -34,6 +35,7 @@ const SCREENS: Record<string, () => ReactNode> = {
   '/invoices': () => <InvoicesPage />,
   '/invoices/:number': () => <InvoiceDetail />,
   '/invoices/ready': () => <ReadyToInvoicePage />,
+  '/tax/vat/:month': () => <VatWorkingsPage />,
   '/invoices/retention': () => <RetentionPage />,
   '/invoices/adjustments': () => <AdjustmentsPage />,
   '/receipts': () => <ReceiptsPage />,
