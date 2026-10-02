@@ -36,6 +36,7 @@ export function coerce(field: FieldDef, raw: unknown, lookup?: LookupIndex): Coe
   switch (field.type) {
     case 'text':
     case 'textarea':
+    case 'file':
       return { ok: true, value: text }
     case 'email':
       return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text)

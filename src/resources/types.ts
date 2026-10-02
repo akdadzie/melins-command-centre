@@ -2,6 +2,8 @@ import type { Role } from '../auth/roles'
 
 export type FieldType =
   | 'text' | 'textarea' | 'email' | 'number' | 'money' | 'percent' | 'date' | 'boolean' | 'select' | 'lookup'
+  /** An attachment path (A-045): shown as upload / view on saved records; never typed or imported. */
+  | 'file'
 
 export interface Option { value: string; label: string }
 

@@ -213,6 +213,7 @@ export const jobContracts: ResourceDef = {
     { name: 'payment_terms', label: 'Payment terms', type: 'text' },
     { name: 'retention_terms', label: 'Retention terms', type: 'text' },
     { name: 'liability_cap', label: 'Liability cap', type: 'text' },
+    { name: 'file_path', label: 'Signed document', type: 'file', csv: false },
     { name: 'notes', label: 'Notes', type: 'textarea' },
   ],
 }
@@ -264,6 +265,7 @@ export const expenses: ResourceDef = {
     { name: 'staff_id', label: 'Staff member (out of pocket)', type: 'lookup', lookup: lookups.staff },
     { name: 'rechargeable', label: 'Rechargeable to client', type: 'boolean', default: false },
     { name: 'recharge_markup_pct', label: 'Recharge markup %', type: 'percent', default: 0, min: 0 },
+    { name: 'receipt_path', label: 'Receipt or invoice', type: 'file', csv: false },
     { name: 'notes', label: 'Notes', type: 'text' },
   ],
   extraListColumns: [{ name: 'review_status', label: 'Review', type: 'text' }],
@@ -306,6 +308,7 @@ export const transfers: ResourceDef = {
     { name: 'amount', label: 'Amount', type: 'money', required: true, min: 0.01, list: true },
     { name: 'reference', label: 'Reference', type: 'text' },
     { name: 'reason', label: 'Reason', type: 'text', list: true },
+    { name: 'attachment_path', label: 'Document', type: 'file', csv: false },
   ],
 }
 
@@ -344,6 +347,7 @@ export const directorTransactions: ResourceDef = {
     { name: 'account_id', label: 'Account', type: 'lookup', required: true, lookup: lookups.account },
     { name: 'description', label: 'Description', type: 'text', list: true },
     { name: 'reference', label: 'Reference', type: 'text' },
+    { name: 'attachment_path', label: 'Document', type: 'file', csv: false },
   ],
 }
 
@@ -458,6 +462,7 @@ export const whtCertificates: ResourceDef = {
     { name: 'client_id', label: 'Client', type: 'lookup', required: true, lookup: lookups.client, list: true },
     { name: 'amount', label: 'WHT amount', type: 'money', required: true, min: 0, list: true },
     { name: 'certificate_number', label: 'Certificate number', type: 'text', list: true },
+    { name: 'scan_path', label: 'Scan of the certificate', type: 'file', csv: false },
     { name: 'expected_by', label: 'Expected by', type: 'date', list: true },
     { name: 'date_received', label: 'Date received', type: 'date', list: true },
     { name: 'status', label: 'Status', type: 'select', required: true, default: 'expected', list: true,

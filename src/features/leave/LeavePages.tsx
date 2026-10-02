@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../../auth/AuthProvider'
 import { canWrite } from '../../auth/roles'
+import { Attachment, openDocument } from '../../components/Attachment'
 import { Dialog } from '../../components/Dialog'
 import { PromptDialog, StatusBadge, Tabs, useAction } from '../../components/ui'
 import { formatDate, todayAccra } from '../../lib/format'
@@ -170,7 +171,7 @@ export function MyLeavePage() {
   const requests = useQuery({
     queryKey: ['leave-requests', 'mine', staffId],
     enabled: !!staffId,
-    queryFn: async () => (await supabase.from('leave_requests').select('*, type:leave_types(name)')
+    queryFn: async () => (await supabase.from('leave_requests').select('*, type:leave_types(name, requires_document)')
       .eq('staff_id', staffId!).order('start_date', { ascending: false })).data ?? [],
   })
   const year = defaultYear(balances.data ?? [])
@@ -199,7 +200,9 @@ export function MyLeavePage() {
           <thead><tr><th>Dates</th><th>Type</th><th className="num">Days</th><th>Status</th><th /></tr></thead>
           <tbody>{(requests.data ?? []).map((r) => (
             <tr key={r.id}>
-              <td>{dateRange(r.start_date, r.end_date)}{r.reason && <div className="muted small">{r.reason}</div>}</td>
+              <td>{dateRange(r.start_date, r.end_date)}{r.reason && <div className="muted small">{r.reason}</div>}
+                {(r.type?.requires_document || r.document_path) && <Attachment table="leave_requests" column="document_path" recordId={r.id} path={r.document_path}
+                  label="Supporting document" editable={canWrite(role) && ['requested', 'approved'].includes(r.status)} />}</td>
               <td>{r.type?.name}</td>
               <td className="num">{r.working_days}</td>
               <td><StatusBadge status={r.status === 'approved' && r.end_date < today ? 'taken' : r.status} />
@@ -220,7 +223,7 @@ export function MyLeavePage() {
 // ---------------------------------------------------------------------------
 type Req = {
   id: string; staff_id: string; leave_type_id: string; start_date: string; end_date: string; working_days: number
-  reason: string | null; status: string; decision_note: string | null; decided_at: string | null
+  reason: string | null; status: string; decision_note: string | null; decided_at: string | null; document_path: string | null
   staff: { full_name: string; approver_staff_id: string | null } | null
   type: { name: string; uses_annual_balance: boolean; requires_document: boolean; document_after_days: number | null } | null
 }
@@ -238,7 +241,7 @@ export function LeaveRequestsPage() {
     queryKey: ['leave-requests', 'all'],
     queryFn: async () => {
       const { data, error } = await supabase.from('leave_requests')
-        .select('id, staff_id, leave_type_id, start_date, end_date, working_days, reason, status, decision_note, decided_at, staff:staff(full_name, approver_staff_id), type:leave_types(name, uses_annual_balance, requires_document, document_after_days)')
+        .select('id, staff_id, leave_type_id, start_date, end_date, working_days, reason, status, decision_note, decided_at, document_path, staff:staff(full_name, approver_staff_id), type:leave_types(name, uses_annual_balance, requires_document, document_after_days)')
         .order('start_date', { ascending: false }).limit(2000)
       if (error) throw error
       return (data ?? []) as unknown as Req[]
@@ -296,7 +299,8 @@ export function LeaveRequestsPage() {
                 <td>{r.staff?.full_name}</td>
                 <td>{r.type?.name}{r.reason && <div className="muted small">{r.reason}</div>}
                   {r.type?.requires_document && (!r.type.document_after_days || r.working_days > r.type.document_after_days) &&
-                    <div className="warn-text small">Supporting document needed</div>}</td>
+                    (r.document_path ? <button className="link small" onClick={() => action.run(() => openDocument(r.document_path!))}>Supporting document</button>
+                      : <div className="warn-text small">Supporting document needed</div>)}</td>
                 <td>{dateRange(r.start_date, r.end_date)}</td>
                 <td className="num">{r.working_days}</td>
                 <td>{after === null ? <span className="muted">—</span>

@@ -9,6 +9,7 @@ import { Link, useParams } from 'react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../../auth/AuthProvider'
 import { canWrite } from '../../auth/roles'
+import { Attachment } from '../../components/Attachment'
 import { Dialog } from '../../components/Dialog'
 import { Money, StatusBadge, Tabs, useAction } from '../../components/ui'
 import { formatDate, formatMoney, parseMoney, todayAccra } from '../../lib/format'
@@ -308,8 +309,11 @@ export function DirectorPayments({ directorId }: { directorId?: string }) {
                 {p.notes && <div className="muted small">{p.notes}</div>}</div>
               <div className="num small">gross <Money value={p.gross_amount} /> · tax {Math.round(Number(p.tax_rate) * 10000) / 100}% <Money value={p.tax_amount} /> · <strong>net <Money value={p.net_amount} /></strong></div>
             </div>
-            {p.payment_type === 'dividend' && !p.board_resolution_path && p.status === 'prepared' &&
-              <p className="warn-text small">A dividend needs its board resolution attached before approval.</p>}
+            {p.payment_type === 'dividend' && <>
+              {!p.board_resolution_path && p.status === 'prepared' && <p className="warn-text small">A dividend needs its board resolution attached before approval.</p>}
+              <Attachment table="director_payments" column="board_resolution_path" recordId={p.id} path={p.board_resolution_path} label="Board resolution"
+                editable={canWrite(role) && (role === 'owner' || role === 'accountant') && p.status === 'prepared'} onChanged={refresh} />
+            </>}
             <PayoutActions table="director_payments" row={p} onChanged={refresh} payRoles={['owner', 'accountant']} />
           </div>
         ))}</div>

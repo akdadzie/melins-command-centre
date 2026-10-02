@@ -9,6 +9,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../../auth/AuthProvider'
 import { canWrite } from '../../auth/roles'
 import { Dialog } from '../../components/Dialog'
+import { documentPath, DOCUMENTS_BUCKET } from '../../components/Attachment'
 import { Money, PromptDialog, StatusBadge, useAction } from '../../components/ui'
 import { formatDate, formatMoney, parseMoney, todayAccra } from '../../lib/format'
 import { supabase } from '../../lib/supabase'
@@ -448,6 +449,7 @@ function UploadStatement({ account, month, onClose, onSaved }: { account: { id: 
   const [closing, setClosing] = useState('')
   const [parsed, setParsed] = useState<{ lines: StatementLine[]; errors: string[]; columns: Record<string, string> } | null>(null)
   const [fileName, setFileName] = useState('')
+  const [file, setFile] = useState<File | null>(null)
   const action = useAction()
   const inPeriod = (parsed?.lines ?? []).filter((l) => l.line_date >= start && l.line_date <= end)
   const outside = (parsed?.lines.length ?? 0) - inPeriod.length
@@ -458,6 +460,7 @@ function UploadStatement({ account, month, onClose, onSaved }: { account: { id: 
   async function onFile(f: File | undefined) {
     if (!f) return
     setFileName(f.name)
+    setFile(f)
     const r = parseStatementCsv(await f.text())
     setParsed(r as typeof parsed)
     const withBal = r.lines.filter((l) => l.running_balance !== null)
@@ -478,6 +481,11 @@ function UploadStatement({ account, month, onClose, onSaved }: { account: { id: 
       if (inPeriod.length) {
         const { error: e2 } = await supabase.from('statement_lines').insert(inPeriod.map((l) => ({ ...l, import_id: imp.id })))
         if (e2) { await supabase.from('statement_imports').delete().eq('id', imp.id); return friendlyError(e2) }
+      }
+      if (file) {   // keep the original with the import; a failure here doesn't undo the lines
+        const path = documentPath('statement_imports', imp.id, file.name)
+        const { error: e3 } = await supabase.storage.from(DOCUMENTS_BUCKET).upload(path, file, { contentType: file.type || 'text/csv' })
+        if (!e3) await supabase.from('statement_imports').update({ file_path: path }).eq('id', imp.id)
       }
       await onSaved()
     })

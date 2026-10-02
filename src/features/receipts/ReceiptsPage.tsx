@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../../auth/AuthProvider'
 import { canWrite } from '../../auth/roles'
+import { Attachment } from '../../components/Attachment'
 import { Dialog } from '../../components/Dialog'
 import { Money, PromptDialog, StatusBadge, Tabs, useAction } from '../../components/ui'
 import { formatDate, formatMoney, parseMoney, todayAccra } from '../../lib/format'
@@ -312,6 +313,8 @@ function ReceiptDetail({ id, onClose }: { id: string; onClose: () => void }) {
         <ReceiptFieldsForm value={value} onChange={setValue} disabled={!editable} lockClient={(allocs.data ?? []).length > 0} />
         {editable && <div className="form-actions"><button disabled={action.busy}>Save details</button></div>}
       </form>
+
+      <Attachment table="receipts" column="attachment_path" recordId={id} path={r.attachment_path} label="Cheque, deposit slip or remittance advice" editable={writer} />
 
       <h3>Allocation to invoices</h3>
       <p className="small">{formatMoney(total(r))} received (cash + WHT + VAT withheld) · {formatMoney(totalAllocated)} allocated ·{' '}

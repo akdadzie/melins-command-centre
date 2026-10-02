@@ -2,6 +2,7 @@ import { useMemo, useState, type FormEvent } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../auth/AuthProvider'
 import { db } from '../lib/supabase'
+import { Attachment } from '../components/Attachment'
 import { coerce, display } from './coerce'
 import type { FieldDef, ResourceDef, Row } from './types'
 import { friendlyError, useLookupIndexes } from './useLookups'
@@ -54,6 +55,7 @@ export function ResourceForm({ resource, row, onDone, preset, hide }: Props) {
     const errs: Record<string, string> = {}
     for (const f of fields) {
       if (editing && f.createOnly) continue
+      if (f.type === 'file') continue   // saved by the attachment control itself
       if (hide?.includes(f.name) && !(preset && f.name in preset && !editing)) continue
       const raw = values[f.name]
       const res = coerce(f, f.type === 'boolean' ? (raw ? 'yes' : 'no') : raw, indexes[f.name])
@@ -109,6 +111,11 @@ export function ResourceForm({ resource, row, onDone, preset, hide }: Props) {
                   {(options[f.name] ?? []).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
               )
+              break
+            case 'file':
+              input = editing
+                ? <Attachment table={resource.table} column={f.name} recordId={String(row!.id)} path={row![f.name] as string | null} editable={canSave} label="" />
+                : <span className="muted small">Save first, then attach the file.</span>
               break
             case 'date':
               input = <input id={id} type="date" value={String(v)} disabled={disabled} onChange={(e) => set(f.name, e.target.value)} />

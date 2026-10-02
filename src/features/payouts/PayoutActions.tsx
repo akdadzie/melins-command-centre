@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '../../auth/AuthProvider'
 import { canWrite } from '../../auth/roles'
+import { Attachment } from '../../components/Attachment'
 import { Dialog } from '../../components/Dialog'
 import { PromptDialog, StatusBadge, useAction } from '../../components/ui'
 import { formatDate, todayAccra } from '../../lib/format'
@@ -18,6 +19,7 @@ export interface PayoutRow {
   payment_date?: string | null
   review_status?: string | null
   query_note?: string | null
+  attachment_path?: string | null
 }
 
 const METHODS = [['bank_transfer', 'Bank transfer'], ['cheque', 'Cheque'], ['cash', 'Cash'], ['mobile_money', 'Mobile money'], ['other', 'Other']] as const
@@ -62,6 +64,8 @@ export function PayoutActions({ table, row, onChanged, payRoles = ['owner', 'acc
             <button disabled={action.busy} onClick={() => confirm('Cancel this payment?') && set({ status: 'cancelled' })}>Cancel</button>}
         </div>
       )}
+      <Attachment table={table} column="attachment_path" recordId={row.id} path={row.attachment_path} label="Document"
+        editable={writer && ['owner', 'accountant', 'admin'].includes(role ?? '') && row.status !== 'cancelled'} />
       <ReviewActions table={table} row={row} onChanged={onChanged} />
       {row.review_status === 'queried' && row.query_note && <p className="form-error">Queried: {row.query_note}</p>}
       {action.error && <p className="form-error">{action.error}</p>}

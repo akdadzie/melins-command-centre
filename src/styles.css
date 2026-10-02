@@ -252,3 +252,8 @@ ul.task-list li { display: flex; justify-content: space-between; gap: .75rem; al
 ul.entry-list li.unread { border-left: 4px solid var(--red); background: var(--red-tint); }
 a.bell { position: relative; }
 a.bell .dot { position: absolute; top: 4px; right: 0; background: var(--red); color: #fff; font-size: .65rem; font-weight: 700; border-radius: 999px; padding: 0 .3rem; line-height: 1.4; }
+
+/* Attachments (A-045) */
+.attachment { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin: .5rem 0; font-size: .9rem; }
+.attachment .label:not(:empty) { color: var(--muted); font-size: .8rem; text-transform: uppercase; letter-spacing: .03em; }
+.attachment .small-button { min-height: 36px; padding: 0 .75rem; font-size: .85rem; cursor: pointer; }
