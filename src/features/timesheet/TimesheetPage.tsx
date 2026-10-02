@@ -44,7 +44,8 @@ export function TimesheetPage() {
     const d = params.get('date')
     return d && /^\d{4}-\d{2}-\d{2}$/.test(d) && d <= todayAccra() ? d : todayAccra()
   })
-  const [forStaff, setForStaff] = useState(profile?.staff_id ?? '')
+  // /team links here with &staff= to enter a missing day on someone's behalf.
+  const [forStaff, setForStaff] = useState(() => ((role === 'owner' || role === 'project_lead') && params.get('staff')) || profile?.staff_id || '')
   const onBehalf = forStaff !== profile?.staff_id
 
   const flush = useCallback(async () => {
