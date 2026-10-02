@@ -3558,6 +3558,20 @@ export type Database = {
             referencedColumns: ["director_id"]
           },
           {
+            foreignKeyName: "receipts_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "receipts_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "user_directory"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "receipts_statement_line_id_fkey"
             columns: ["statement_line_id"]
             isOneToOne: true
@@ -6344,7 +6358,10 @@ export type Database = {
           withheld_by_clients: number
         }[]
       }
-      working_days: { Args: { p_end: string; p_start: string }; Returns: number }
+      working_days: {
+        Args: { p_end: string; p_start: string }
+        Returns: number
+      }
     }
     Enums: {
       app_role:
