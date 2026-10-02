@@ -8,6 +8,7 @@ import { ImportExportPage } from './pages/ImportExportPage'
 import { MyProfile } from './pages/MyProfile'
 import { InvoiceDetail } from './features/invoices/InvoiceDetail'
 import { InvoicesPage } from './features/invoices/InvoicesPage'
+import { AdjustmentsPage, ReadyToInvoicePage, RetentionPage } from './features/invoices/InvoiceListsPages'
 import { NewReceiptFromStatement, ReceiptsPage } from './features/receipts/ReceiptsPage'
 import { MyPayslips, PayrollPage, PayrollRunPage, PayslipView } from './features/payroll/PayrollPages'
 import { TimesheetApprovalsPage, TimesheetPage } from './features/timesheet/TimesheetPage'
@@ -32,6 +33,9 @@ const SCREENS: Record<string, () => ReactNode> = {
   '/me': () => <MyProfile />,
   '/invoices': () => <InvoicesPage />,
   '/invoices/:number': () => <InvoiceDetail />,
+  '/invoices/ready': () => <ReadyToInvoicePage />,
+  '/invoices/retention': () => <RetentionPage />,
+  '/invoices/adjustments': () => <AdjustmentsPage />,
   '/receipts': () => <ReceiptsPage />,
   '/receipts/new': () => <NewReceiptFromStatement />,
   '/receipts/wht': () => <ResourceList resource={R.whtCertificates} />,
