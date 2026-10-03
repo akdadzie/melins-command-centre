@@ -5138,6 +5138,13 @@ export type Database = {
             referencedRelation: "statutory_lines"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "statutory_payments_statutory_line_id_fkey"
+            columns: ["statutory_line_id"]
+            isOneToOne: false
+            referencedRelation: "statutory_plans"
+            referencedColumns: ["statutory_line_id"]
+          },
         ]
       }
       statutory_plan_instalments: {
@@ -5168,7 +5175,29 @@ export type Database = {
           notes?: string | null
           statutory_line_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "statutory_plan_instalments_statutory_line_id_fkey"
+            columns: ["statutory_line_id"]
+            isOneToOne: false
+            referencedRelation: "statutory_ledger"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "statutory_plan_instalments_statutory_line_id_fkey"
+            columns: ["statutory_line_id"]
+            isOneToOne: false
+            referencedRelation: "statutory_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "statutory_plan_instalments_statutory_line_id_fkey"
+            columns: ["statutory_line_id"]
+            isOneToOne: false
+            referencedRelation: "statutory_plans"
+            referencedColumns: ["statutory_line_id"]
+          },
+        ]
       }
       supplier_identifiers: {
         Row: {
@@ -5408,7 +5437,21 @@ export type Database = {
             foreignKeyName: "tax_credit_applications_credit_id_fkey"
             columns: ["credit_id"]
             isOneToOne: false
+            referencedRelation: "tax_credit_balances"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tax_credit_applications_credit_id_fkey"
+            columns: ["credit_id"]
+            isOneToOne: false
             referencedRelation: "tax_credits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tax_credit_applications_statutory_line_id_fkey"
+            columns: ["statutory_line_id"]
+            isOneToOne: false
+            referencedRelation: "statutory_ledger"
             referencedColumns: ["id"]
           },
           {
@@ -5417,6 +5460,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "statutory_lines"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tax_credit_applications_statutory_line_id_fkey"
+            columns: ["statutory_line_id"]
+            isOneToOne: false
+            referencedRelation: "statutory_plans"
+            referencedColumns: ["statutory_line_id"]
           },
         ]
       }
@@ -5469,7 +5519,22 @@ export type Database = {
           tax_type?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tax_credits_auto_offset_type_fkey"
+            columns: ["auto_offset_type"]
+            isOneToOne: false
+            referencedRelation: "statutory_due_rules"
+            referencedColumns: ["type"]
+          },
+          {
+            foreignKeyName: "tax_credits_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       timesheet_activities: {
         Row: {
@@ -6054,9 +6119,20 @@ export type Database = {
         Insert: {
           accounts_email?: string | null
           address?: string | null
+          company_email?: never
+          company_phone?: string | null
+          company_website?: string | null
           effective_from?: string | null
           invoice_payment_details?: string | null
           invoice_terms_days?: number | null
+          payment_bank_account_name?: string | null
+          payment_bank_account_number?: string | null
+          payment_bank_branch?: string | null
+          payment_bank_name?: string | null
+          payment_momo_account_name?: string | null
+          payment_momo_network?: string | null
+          payment_momo_note?: string | null
+          payment_momo_number?: string | null
           registered_name?: string | null
           tin?: string | null
           vat_number?: string | null
@@ -6064,9 +6140,20 @@ export type Database = {
         Update: {
           accounts_email?: string | null
           address?: string | null
+          company_email?: never
+          company_phone?: string | null
+          company_website?: string | null
           effective_from?: string | null
           invoice_payment_details?: string | null
           invoice_terms_days?: number | null
+          payment_bank_account_name?: string | null
+          payment_bank_account_number?: string | null
+          payment_bank_branch?: string | null
+          payment_bank_name?: string | null
+          payment_momo_account_name?: string | null
+          payment_momo_network?: string | null
+          payment_momo_note?: string | null
+          payment_momo_number?: string | null
           registered_name?: string | null
           tin?: string | null
           vat_number?: string | null
@@ -6458,7 +6545,41 @@ export type Database = {
           remaining: number | null
           tax_type: string | null
         }
-        Relationships: []
+        Insert: {
+          amount?: number | null
+          applied?: never
+          as_at?: string | null
+          authority?: string | null
+          auto_offset_type?: string | null
+          description?: string | null
+          id?: string | null
+          notes?: string | null
+          reference?: string | null
+          remaining?: never
+          tax_type?: string | null
+        }
+        Update: {
+          amount?: number | null
+          applied?: never
+          as_at?: string | null
+          authority?: string | null
+          auto_offset_type?: string | null
+          description?: string | null
+          id?: string | null
+          notes?: string | null
+          reference?: string | null
+          remaining?: never
+          tax_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tax_credits_auto_offset_type_fkey"
+            columns: ["auto_offset_type"]
+            isOneToOne: false
+            referencedRelation: "statutory_due_rules"
+            referencedColumns: ["type"]
+          },
+        ]
       }
       timesheet_charge_out: {
         Row: {
@@ -6519,6 +6640,11 @@ export type Database = {
       }
     }
     Functions: {
+      accountant_queue: { Args: never; Returns: Json }
+      apply_payroll_cost_changes: {
+        Args: { p_run: string; p_staff: string[] }
+        Returns: number
+      }
       apply_tax_credit: {
         Args: {
           p_amount: number
@@ -6528,11 +6654,6 @@ export type Database = {
           p_notes?: string
         }
         Returns: string
-      }
-      accountant_queue: { Args: never; Returns: Json }
-      apply_payroll_cost_changes: {
-        Args: { p_run: string; p_staff: string[] }
-        Returns: number
       }
       close_month: { Args: { p_month: string }; Returns: undefined }
       entries_to_review: {
