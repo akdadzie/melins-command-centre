@@ -13,10 +13,10 @@ Every decision, assumption and change made during the build goes here. Read this
 
 | Item | State |
 |---|---|
-| Current phase | **Phase A: screens** (2 Oct 2026). Migrations through 1600 are applied to staging (checked 2 Oct 2026, with all three Edge Functions deployed and both reminder schedules active). **1700 to 2000 are applied to staging (3 Oct 2026; the types are regenerated from it). 2100 (leave and setup fixes, D-046 to D-050) is waiting to be pushed.** Built: every Phase A route (no placeholders left), Settings with the setup wizard, document uploads, reminders and email sender, and the weekly backup. **Next:** the NSP import (D-030, waiting for the sheet layout), then the Phase A acceptance run on staging and the production deploy. |
+| Current phase | **Phase A, going live** (3 Oct 2026). Every Phase A screen is built (no placeholders left). **Staging:** migrations 0100 to 2000 are applied (checked 3 Oct; Edge Functions and reminder schedules active; types regenerated from it). 2100 (leave and setup fixes, D-046 to D-050) and 2200 (go-live dates, D-052) are waiting to be pushed. **Production:** soft launch 12 Oct 2026 for timesheets and leave; full go-live 1 Nov; first close (October, then November) in early December (D-051). Checklist: `docs/GO_LIVE_PRODUCTION.md`. **Next:** the NSP import once its layout arrives (D-030), and the Phase A acceptance run on staging before 1 Nov. |
 | Brief | PROJECT_BRIEF.md = `MeLiNS_Command_Centre_Build_Prompt_v2.txt`, revision 2.4 (28 Sep 2026), copied unchanged |
 | Repository | https://github.com/akdadzie/melins-command-centre (private); local folder `C:\dev\melins-ims` |
-| Waiting on Owner | Push migrations 1700 and 1800 (`docs/SETUP_INFRA.md` §9), then enter the VAT credit (GHS 9,482.80) and the arrears notes in Settings › Setup, step 4, and the MoMo number and company phone in Settings › Company and rules (D-039); set up the weekly backup (`docs/BACKUP_RESTORE.md`); work through the setup wizard on staging; add a backup authenticator (`docs/ACCESS_RECOVERY.md`); SMTP/DNS setup, then the email schedule (§10); the NSP sheet layout (D-030); the December bonus layout before November (D-031); statement samples; user email list; leave defaults (A-038) |
+| Waiting on Owner | **For 12 Oct:** work through `docs/GO_LIVE_PRODUCTION.md`: production migrations, functions, SMTP and DNS, Netlify and app.themelins.com, your account and backup authenticator, staff start dates, leave defaults and public holidays, inviting the four users, backup secrets. **Information still needed:** the five users' emails and start dates; Annual days and the Sick/Compassionate/Study caps, and the carry-over limit; the MoMo number, TIN, VAT number and address (by 1 Nov); NSP1 to NSP3's names and emails (by 1 Nov); the NSP sheet layout (D-030); the December bonus layout before November (D-031); Prudential Bank and MoMo statement samples (D-025). |
 
 ---
 
@@ -222,6 +222,24 @@ It is modelled as Tier 3 (employee and employer), with a dated rate setting defa
 **D-049: Fees received, on the same basis as fees invoiced.** The Home "Fees" tile showed invoiced net of VAT but received including VAT and WHT. "Received" is now the net fee received: each confirmed payment's share of the net fee on the invoices it settles, with cash, WHT and VAT withheld all counted, since they settle the invoice. So a fully paid invoice counts as its net fee in both figures. The Directors' monthly summary keeps "received" as confirmed cash, as labelled there.
 
 **D-050: Company phone.** **+233 56 071 2012** (supplied by the Owner) is the company phone in the invoice header. It's a setting (Settings › Company and rules), filled in by migration 2100.
+
+### Go-live plan, 3 Oct 2026 (D-051 to D-053)
+
+**D-051: Go-live in two steps.**
+- **Soft launch on production, 12 to 14 Oct 2026:** timesheets and leave only, for Kwasi Dadzie Ennison, Francis Austin, Ernest Gbadago, Ibrahim Commedan and Nana Poku.
+- **The Owner travels 16 Oct to 6 Nov.** Francis approves timesheets and leave meanwhile.
+- **Full go-live on 1 Nov 2026,** when NSP1 to NSP3 start. NSP3 (Admin) back-enters October's money records in the first week of November.
+- **First month close:** October and November together, in early December, October first.
+- **Production starts with no test data:** only the staff, settings and opening balances (as at 30 Sep 2026, D-029) that the Owner enters. A database built fresh from the migrations has no clients, jobs, invoices, payments, accounts, timesheets, leave or users (checked 3 Oct 2026).
+- The Owner's step-by-step list is in `docs/GO_LIVE_PRODUCTION.md`.
+
+**D-052: Dates and approvals for the soft launch.**
+- **Timesheets count from 12 Oct 2026** on production: missing days, compliance, utilisation and timesheet reminders (`app.system_config.go_live_date`, migration 2200). So the 1 to 9 October days before launch aren't chased. Money opening balances are unaffected (D-029).
+- **NSP1 to NSP3 start on 1 Nov 2026,** set in migration 2200 (only replacing the seeded placeholder).
+- **The other five staff's start dates** must be corrected to their actual dates before the 2026 leave year is set up. The seeded 1 Sep is a placeholder (A-018), and annual leave is pro-rated by it.
+- **While the Owner is away,** Francis approves his team as usual (D-015), including late entries up to day 10. Approvals that are the Owner's stay with the Owner: Francis's own timesheets and leave, entries after day 10, and leave over a balance or cap. The Owner approves them from a phone, or they wait. Waiting only delays freezing the rates. No delegation was built: none was asked for, and a Project lead approving his own time would go against brief §4.
+
+**D-053: Releases once production is live.** From 12 Oct, `main` deploys to app.themelins.com. Changes are built on branches, tried on staging (the `staging` branch deploy, or the Owner's local app against staging) and merged to `main` only once they've been tried. Migrations go to staging first, then production (D-002); the folder is linked back to staging after every production push.
 
 ---
 

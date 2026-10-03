@@ -26,6 +26,7 @@ The schema, RLS, triggers and reference data live in `supabase/migrations`, appl
 | `1900_invoice_and_arrears_fixes` | Allocations refitted when a payment changes (D-037); WHT rate re-read on drafts (D-038); invoice contact and payment settings, client address and contact (D-039); statutory payment plans (D-040) |
 | `2000_timesheet_activities` | Activity list, activity and description required, on-behalf entries inside the window not late, hours-by-activity report, promoting custom activities (D-042 to D-044) |
 | `2100_leave_and_setup_fixes` | Leave entitlement kinds (annual, yearly cap, per event, none), per-event limits and documents, yearly caps on approval, deleting unused entitlements, net fees received, company phone (D-046 to D-050) |
+| `2200_go_live_dates` | Timesheets count from the 12 Oct soft launch; NSP1-3 start 1 Nov (D-052) |
 | `1800_staging_fixes` | Tax credits with automatic VAT offsets and GRA-approved offsets (D-032); go-live date setting and floors (D-034); reconciliation from the opening month (D-033); arrears notes in the Money panel (D-036) |
 
 ## How it fits together

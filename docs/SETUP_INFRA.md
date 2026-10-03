@@ -1,6 +1,6 @@
 # Infrastructure setup: Owner's steps
 
-This guide covers everything you need to do in Supabase, Netlify, cPanel and Namecheap. **Never paste a password, service-role key, database password or SMTP password into chat or into any committed file.**
+This guide covers everything you need to do in Supabase, Netlify, cPanel and Namecheap. **For production, follow `docs/GO_LIVE_PRODUCTION.md`**, which takes these steps in order for the 12 Oct soft launch. **Never paste a password, service-role key, database password or SMTP password into chat or into any committed file.**
 
 ## 1. Values I need, and where they go
 
