@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '../auth/AuthProvider'
 import { ROLE_LABELS } from '../auth/roles'
 import { appEnv, supabase } from '../lib/supabase'
+import { ErrorBoundary } from './ErrorBoundary'
 import { ROUTES, canOpen, type RouteDef } from '../routes/routeTable'
 
 const GROUPS: NonNullable<RouteDef['nav']>[] = ['Money', 'Work', 'People', 'Records', 'Admin']
@@ -53,7 +54,7 @@ export function Layout({ children }: { children: ReactNode }) {
             )
           })}
         </nav>
-        <main className="content">{children}</main>
+        <main className="content"><ErrorBoundary resetKey={location.pathname}>{children}</ErrorBoundary></main>
       </div>
     </div>
   )

@@ -388,6 +388,13 @@ Forms and CSV import share one parser (`coerce.ts`), so any row that imports is 
 - **Restoring.** `scripts/backup/restore.sh` loads a backup into a project built from the migrations, with triggers off, so balances, numbers and the audit log come back exactly. It then checks every table's count against the manifest.
 - **Tested locally on 2 Oct 2026:** backup, decrypt, restore into a fresh database, all 68 tables matched, and balances, receivables and logins were identical. It hasn't yet run on GitHub or Supabase. Set-up and restore steps are in docs/BACKUP_RESTORE.md.
 
+**A-047: No blank screens; changes on a branch while the Owner tests (3 Oct 2026).**
+- **The blank screen reported on 3 Oct.** A test now walks the reported steps through the real screens: create a job, enter its fee, open it, change the fee. It passes, so the job screens weren't the cause. The likely cause was an unfinished edit of mine: for about a minute, `VatWorkingsPage.tsx` declared the same name twice. The page's code then couldn't load, and since every screen is loaded with the app, the whole app went blank, whichever screen was open.
+- **Error boundaries.** Each screen sits inside an error boundary in the layout. If a screen crashes, the person sees "Something went wrong" with Reload and "Go to your home screen", and short details to pass on; the menu keeps working, and moving to another page clears it. A second boundary wraps the whole app.
+- **Fallback when the app can't load.** If the app's code doesn't load at all, React never starts, so no boundary can help. A small script in `index.html` then shows the same message with a Reload button: when a script fails to load, or if the page is still empty after 15 seconds.
+- **Working while the Owner tests.** Changes are made on a separate branch in its own worktree (`C:\dev\melins-ims-work`, with its own `node_modules`). Nothing changes under `C:\dev\melins-ims` until the Owner merges.
+- **Screen tests.** `src/test/harness.tsx` renders real screens against an in-memory stand-in for Supabase, so whole flows can be tested in `npm test`.
+
 ---
 
 ## Findings from the payroll workbook (28 Sep 2026)

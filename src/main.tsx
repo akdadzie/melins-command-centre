@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from './auth/AuthProvider'
 import { App } from './App'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { configError } from './lib/supabase'
 import './styles.css'
 
@@ -16,10 +17,12 @@ if (configError) {
   root.render(<div className="auth-page"><p className="form-error">{configError}</p></div>)
 } else root.render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
-    </QueryClientProvider>
+    <ErrorBoundary whole>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   </StrictMode>,
 )
