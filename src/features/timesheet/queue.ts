@@ -12,6 +12,9 @@ export interface EntryPayload {
   hours: number
   description: string | null
   late_reason: string | null
+  /** D-042: one of the Owner's activities, or the person's own words. */
+  activity_id?: string | null
+  activity_custom?: string | null
 }
 
 export interface QueuedEntry {

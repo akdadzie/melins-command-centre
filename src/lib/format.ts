@@ -69,3 +69,11 @@ export function parseBoolean(input: string | boolean | null | undefined): boolea
   if (['no', 'n', 'false', '0', ''].includes(s)) return s === '' ? null : false
   return null
 }
+
+/** 1.25 -> "1 h 15 min", 0.5 -> "30 min", 8 -> "8 h" (timesheets, D-042). */
+export function formatHours(hours: number): string {
+  const total = Math.round(hours * 60)
+  const h = Math.floor(total / 60), m = total % 60
+  if (h && m) return `${h} h ${m} min`
+  return h ? `${h} h` : `${m} min`
+}

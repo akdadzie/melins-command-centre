@@ -10,6 +10,7 @@ import { InvoiceDetail } from './features/invoices/InvoiceDetail'
 import { InvoicesPage } from './features/invoices/InvoicesPage'
 import { ClientDetail, DirectorDetail, DirectorPaymentsPage, DirectorsPage, ReferrerDetail } from './features/records/DetailPages'
 import { TeamPage } from './features/team/TeamPage'
+import { ActivityReportPage } from './features/team/ActivityReport'
 import { VatWorkingsPage } from './features/tax/VatWorkingsPage'
 import { AdjustmentsPage, ReadyToInvoicePage, RetentionPage } from './features/invoices/InvoiceListsPages'
 import { NewReceiptFromStatement, ReceiptsPage } from './features/receipts/ReceiptsPage'
@@ -77,6 +78,7 @@ const SCREENS: Record<string, () => ReactNode> = {
   '/leave/calendar': () => <LeaveCalendarPage />,
   '/leave/balances': () => <LeaveBalancesPage />,
   '/team': () => <TeamPage />,
+  '/team/activities': () => <ActivityReportPage />,
   '/team/staff': () => <StaffPage />,
 }
 

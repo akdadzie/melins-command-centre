@@ -24,6 +24,7 @@ The schema, RLS, triggers and reference data live in `supabase/migrations`, appl
 | `1600_reminders` | Daily and 17:00 reminder routines scheduled with pg_cron; reminders sent once each (A-042) |
 | `1700_documents` | Private `documents` bucket; a file is visible to whoever can read its record (A-045) |
 | `1900_invoice_and_arrears_fixes` | Allocations refitted when a payment changes (D-037); WHT rate re-read on drafts (D-038); invoice contact and payment settings, client address and contact (D-039); statutory payment plans (D-040) |
+| `2000_timesheet_activities` | Activity list, activity and description required, on-behalf entries inside the window not late, hours-by-activity report, promoting custom activities (D-042 to D-044) |
 | `1800_staging_fixes` | Tax credits with automatic VAT offsets and GRA-approved offsets (D-032); go-live date setting and floors (D-034); reconciliation from the opening month (D-033); arrears notes in the Money panel (D-036) |
 
 ## How it fits together
@@ -96,6 +97,7 @@ pg_ctl -D <dir> -o "-p 54329" start
 | `94_test_documents.sql` | A-045 (and 4, 22 for files) |
 | `95_test_staging_fixes.sql` | D-032 to D-036 |
 | `96_test_invoice_fixes.sql` | D-037 to D-041 |
+| `97_test_timesheet_activities.sql` | D-042 to D-044 |
 
 Items 1, 2 and 28 (domain and email, routes, CSV and backups) are tested at the front-end and infrastructure stage. The same acceptance tests are re-run on staging before production.
 

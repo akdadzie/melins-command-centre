@@ -37,3 +37,13 @@ describe('parse', () => {
     expect(parseBoolean('maybe')).toBeNull()
   })
 })
+
+describe('formatHours', () => {
+  it('reads like a duration', async () => {
+    const { formatHours } = await import('./format')
+    expect(formatHours(1.25)).toBe('1 h 15 min')
+    expect(formatHours(0.5)).toBe('30 min')
+    expect(formatHours(8)).toBe('8 h')
+    expect(formatHours(0.25)).toBe('15 min')
+  })
+})

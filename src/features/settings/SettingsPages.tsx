@@ -36,7 +36,7 @@ export function SettingsPage() {
   const tab = requested && tabs.includes(requested) ? requested : tabs[0]
   const dataTabs = role === 'accountant'
     ? [R.publicHolidays, R.statutoryLines, R.accounts, R.expenseCategories]
-    : [R.accounts, R.expenseCategories, R.jobTypes, R.leaveTypes, R.leaveEntitlements, R.publicHolidays]
+    : [R.accounts, R.expenseCategories, R.jobTypes, R.timesheetActivities, R.leaveTypes, R.leaveEntitlements, R.publicHolidays]
   return (
     <section>
       <header className="page-header"><div><h1>Settings</h1>

@@ -145,8 +145,8 @@ reset role;
 -- Francis logs one hour today on the job (for the check below).
 select tests.login('francis@t');
 set role authenticated;
-insert into public.timesheet_entries (staff_id, work_date, category, job_id, hours, description)
-select app.my_staff_id(), app.today(), 'job', (select id from public.jobs limit 1), 1, 'Design review';
+insert into public.timesheet_entries (staff_id, work_date, category, job_id, hours, description, activity_custom)
+select app.my_staff_id(), app.today(), 'job', (select id from public.jobs limit 1), 1, 'Design review', 'Test activity';
 reset role;
 
 select tests.login('ernest@t');

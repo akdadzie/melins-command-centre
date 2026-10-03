@@ -27,18 +27,20 @@ export function Layout({ children }: { children: ReactNode }) {
       <header className="topbar">
         <button className="icon menu-toggle" aria-label="Menu" aria-expanded={open} onClick={() => setOpen((o) => !o)}>☰</button>
         <NavLink to="/" className="brand" onClick={() => setOpen(false)}>
+          <img className="brand-logo" src="/brand/melins-logo.jpg" alt="MeLiNS" />
           <span className="wordmark">MeLiNS</span>
           <span className="brand-sub">Command Centre</span>
         </NavLink>
         <div className="topbar-right">
           <NavLink to="/notifications" className="icon bell" aria-label={`Notifications${unread.data ? `: ${unread.data} unread` : ''}`}>🔔{!!unread.data && <span className="dot">{unread.data > 99 ? '99+' : unread.data}</span>}</NavLink>
           <NavLink to="/me" className="user">{profile?.full_name}<span className="role">{role ? ROLE_LABELS[role] : ''}</span></NavLink>
-          <button className="link" onClick={signOut}>Sign out</button>
+          <button className="link signout-top" onClick={signOut}>Sign out</button>
         </div>
       </header>
       <div className="body">
         <nav className={`sidenav${open ? ' open' : ''}`} key={location.pathname} onClick={() => setOpen(false)}>
           <NavLink to="/" end>Home</NavLink>
+          <NavLink to="/me" className="nav-mobile-only">My profile ({profile?.full_name.split(' ')[0]})</NavLink>
           {GROUPS.map((g) => {
             const items = visible.filter((r) => r.nav === g)
             if (items.length === 0) return null
@@ -53,6 +55,7 @@ export function Layout({ children }: { children: ReactNode }) {
               </div>
             )
           })}
+          <button className="link nav-mobile-only signout-menu" onClick={signOut}>Sign out</button>
         </nav>
         <main className="content"><ErrorBoundary resetKey={location.pathname}>{children}</ErrorBoundary></main>
       </div>

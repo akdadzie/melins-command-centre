@@ -12,14 +12,14 @@ select set_config('tests.job', (select id::text from public.jobs where title = '
 -- ---------------------------------------------------------------------------
 select tests.login('ernest@t', 'aal1');
 set role authenticated;
-insert into public.timesheet_entries (client_ref, staff_id, work_date, category, job_id, hours, description)
+insert into public.timesheet_entries (client_ref, staff_id, work_date, category, job_id, hours, description, activity_custom)
 values ('11111111-1111-1111-1111-111111111111', app.my_staff_id(), current_setting('tests.d3')::date, 'job',
-        current_setting('tests.job')::uuid, 8, 'Beam design')
+        current_setting('tests.job')::uuid, 8, 'Beam design', 'Test activity')
 on conflict (client_ref) do nothing;
 -- the phone lost the response and retries the same entry
-insert into public.timesheet_entries (client_ref, staff_id, work_date, category, job_id, hours, description)
+insert into public.timesheet_entries (client_ref, staff_id, work_date, category, job_id, hours, description, activity_custom)
 values ('11111111-1111-1111-1111-111111111111', app.my_staff_id(), current_setting('tests.d3')::date, 'job',
-        current_setting('tests.job')::uuid, 8, 'Beam design')
+        current_setting('tests.job')::uuid, 8, 'Beam design', 'Test activity')
 on conflict (client_ref) do nothing;
 do $$ begin
   perform tests.eq((select count(*)::int from public.timesheet_entries), 1, '29: a retried save does not duplicate the entry');
@@ -32,8 +32,8 @@ do $$ begin
     '%entry window%closed%Project lead%', '30: from day 4 the person''s own entry is rejected');
   perform tests.throws($q$insert into public.timesheet_entries (staff_id, work_date, category, hours)
     values (app.my_staff_id(), app.today() + 1, 'internal', 1)$q$, '%future%', '30: no time logged for future dates');
-  perform tests.throws($q$insert into public.timesheet_entries (staff_id, work_date, category, hours)
-    values (app.my_staff_id(), app.today(), 'internal', 0.3)$q$, '%check constraint%', 'A-013: quarter-hour steps');
+  perform tests.throws($q$insert into public.timesheet_entries (staff_id, work_date, category, hours, description, activity_custom)
+    values (app.my_staff_id(), app.today(), 'internal', 0.3, 'Office admin work', 'Test activity')$q$, '%check constraint%', 'A-013: quarter-hour steps');
 end $$;
 reset role;
 
@@ -57,8 +57,8 @@ do $$ begin
   perform tests.throws($q$update public.timesheet_entries set hours = 1
     where staff_id = (select id from public.staff where full_name = 'Ernest Gbadago')$q$, '%approved and locked%', '30: approved entries are locked');
 end $$;
-insert into public.timesheet_entries (staff_id, work_date, category, job_id, hours, description, late_reason)
-select id, current_setting('tests.d4')::date, 'job', current_setting('tests.job')::uuid, 3, 'Site visit', 'Was on site without signal'
+insert into public.timesheet_entries (staff_id, work_date, category, job_id, hours, description, late_reason, activity_custom)
+select id, current_setting('tests.d4')::date, 'job', current_setting('tests.job')::uuid, 3, 'Site visit', 'Was on site without signal', 'Test activity'
 from public.staff where full_name = 'Ernest Gbadago';
 do $$ begin
   perform tests.ok((select is_late_entry and entered_by = auth.uid() from public.timesheet_entries
@@ -68,15 +68,15 @@ reset role;
 
 select tests.login('owner@t');
 set role authenticated;
-insert into public.timesheet_entries (staff_id, work_date, category, hours, late_reason)
-select id, current_setting('tests.d11')::date, 'internal', 2, 'Forgot to log admin time'
+insert into public.timesheet_entries (staff_id, work_date, category, hours, late_reason, description, activity_custom)
+select id, current_setting('tests.d11')::date, 'internal', 2, 'Forgot to log admin time', 'Office admin work', 'Test activity'
 from public.staff where full_name = 'Ernest Gbadago';
-insert into public.timesheet_entries (staff_id, work_date, category, hours, late_reason)
-select id, current_setting('tests.d4')::date, 'internal', 4, 'Francis was travelling'
+insert into public.timesheet_entries (staff_id, work_date, category, hours, late_reason, description, activity_custom)
+select id, current_setting('tests.d4')::date, 'internal', 4, 'Francis was travelling', 'Office admin work', 'Test activity'
 from public.staff where full_name = 'Francis Austin';
 -- 36: the Owner logs time too, auto-approved, and it counts in utilisation
-insert into public.timesheet_entries (staff_id, work_date, category, job_id, hours, description)
-values (app.my_staff_id(), app.today(), 'job', current_setting('tests.job')::uuid, 6, 'Client meeting');
+insert into public.timesheet_entries (staff_id, work_date, category, job_id, hours, description, activity_custom)
+values (app.my_staff_id(), app.today(), 'job', current_setting('tests.job')::uuid, 6, 'Client meeting', 'Test activity');
 do $$ begin
   perform tests.ok((select count(*) = 2 from public.timesheet_entries where late_reason in ('Forgot to log admin time', 'Francis was travelling')),
                    '30/31: from day 11 (and for Francis from day 4) the Owner can enter it');
@@ -98,8 +98,8 @@ where app.is_working_day(d::date);
 reset role;
 select tests.login('ibrahim@t', 'aal1');
 set role authenticated;
-insert into public.timesheet_entries (staff_id, work_date, category, job_id, hours, description)
-values (app.my_staff_id(), current_setting('tests.d4')::date, 'job', current_setting('tests.job')::uuid, 7, 'Detailing');
+insert into public.timesheet_entries (staff_id, work_date, category, job_id, hours, description, activity_custom)
+values (app.my_staff_id(), current_setting('tests.d4')::date, 'job', current_setting('tests.job')::uuid, 7, 'Detailing the slab', 'Test activity');
 do $$ begin
   perform tests.ok(true, '30: after a public holiday, the old day 4 is day 3 again and the person can log it');
 end $$;

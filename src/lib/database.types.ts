@@ -5471,8 +5471,37 @@ export type Database = {
         }
         Relationships: []
       }
+      timesheet_activities: {
+        Row: {
+          created_at: string
+          group_name: string
+          id: string
+          is_active: boolean
+          name: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          group_name: string
+          id?: string
+          is_active?: boolean
+          name: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          group_name?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       timesheet_entries: {
         Row: {
+          activity_custom: string | null
+          activity_id: string | null
           approved_at: string | null
           approved_by: string | null
           billable: boolean
@@ -5495,6 +5524,8 @@ export type Database = {
           work_date: string
         }
         Insert: {
+          activity_custom?: string | null
+          activity_id?: string | null
           approved_at?: string | null
           approved_by?: string | null
           billable?: boolean
@@ -5517,6 +5548,8 @@ export type Database = {
           work_date: string
         }
         Update: {
+          activity_custom?: string | null
+          activity_id?: string | null
           approved_at?: string | null
           approved_by?: string | null
           billable?: boolean
@@ -5539,6 +5572,13 @@ export type Database = {
           work_date?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "timesheet_entries_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "timesheet_activities"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "timesheet_entries_approved_by_fkey"
             columns: ["approved_by"]
@@ -6443,6 +6483,17 @@ export type Database = {
           },
         ]
       }
+      timesheet_custom_activities: {
+        Row: {
+          activity: string | null
+          entries: number | null
+          hours: number | null
+          key: string | null
+          last_used: string | null
+          people: number | null
+        }
+        Relationships: []
+      }
       user_directory: {
         Row: {
           accepted_invite: boolean | null
@@ -6528,6 +6579,10 @@ export type Database = {
           staff_name: string
         }[]
       }
+      promote_custom_activity: {
+        Args: { p_custom: string; p_group: string; p_name: string }
+        Returns: string
+      }
       quick_log_payment: {
         Args: {
           p_amount: number
@@ -6550,6 +6605,22 @@ export type Database = {
         Returns: undefined
       }
       set_up_leave_year: { Args: { p_year: number }; Returns: number }
+      timesheet_activity_hours: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          activity: string
+          activity_group: string
+          category: string
+          entries: number
+          full_name: string
+          hours: number
+          is_custom: boolean
+          job_id: string
+          job_number: string
+          job_title: string
+          staff_id: string
+        }[]
+      }
       timesheet_compliance: {
         Args: { p_from: string; p_to?: string }
         Returns: {

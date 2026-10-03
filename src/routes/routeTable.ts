@@ -70,6 +70,7 @@ export const ROUTES: RouteDef[] = [
   { path: '/timesheet', title: 'Timesheet', roles: ['owner', 'project_lead', 'staff', 'admin'], phase: 'A', nav: 'People' },
   { path: '/timesheet/approvals', title: 'Timesheet approvals', roles: [...OD, 'project_lead'], phase: 'A', nav: 'People' },
   { path: '/team', title: 'Team workload and utilisation', roles: [...OD, 'accountant', 'project_lead'], phase: 'A', nav: 'People' },
+  { path: '/team/activities', title: 'Hours by activity', roles: [...OD, 'accountant', 'project_lead'], phase: 'A', nav: 'People' },
   { path: '/team/staff', title: 'Staff and cost history', roles: [...OD, 'accountant', 'project_lead'], phase: 'A', nav: 'People' },
   { path: '/trips', title: 'Trips and site visits', roles: ALL, phase: 'B', nav: 'Work' },
   { path: '/suppliers', title: 'Suppliers', roles: [...OD, 'accountant', 'admin', 'project_lead'], phase: 'A', nav: 'Work' },

@@ -13,7 +13,7 @@ Every decision, assumption and change made during the build goes here. Read this
 
 | Item | State |
 |---|---|
-| Current phase | **Phase A: screens** (2 Oct 2026). Migrations through 1600 are applied to staging (checked 2 Oct 2026, with all three Edge Functions deployed and both reminder schedules active). **1700 (documents), 1800 (D-032 to D-036) and 1900 (D-037 to D-041) are waiting to be pushed.** Built: every Phase A route (no placeholders left), Settings with the setup wizard, document uploads, reminders and email sender, and the weekly backup. **Next:** the NSP import (D-030, waiting for the sheet layout), then the Phase A acceptance run on staging and the production deploy. |
+| Current phase | **Phase A: screens** (2 Oct 2026). Migrations through 1600 are applied to staging (checked 2 Oct 2026, with all three Edge Functions deployed and both reminder schedules active). **1700 (documents), 1800 (D-032 to D-036), 1900 (D-037 to D-041) and 2000 (timesheet activities, D-042 to D-044) are waiting to be pushed.** Built: every Phase A route (no placeholders left), Settings with the setup wizard, document uploads, reminders and email sender, and the weekly backup. **Next:** the NSP import (D-030, waiting for the sheet layout), then the Phase A acceptance run on staging and the production deploy. |
 | Brief | PROJECT_BRIEF.md = `MeLiNS_Command_Centre_Build_Prompt_v2.txt`, revision 2.4 (28 Sep 2026), copied unchanged |
 | Repository | https://github.com/akdadzie/melins-command-centre (private); local folder `C:\dev\melins-ims` |
 | Waiting on Owner | Push migrations 1700 and 1800 (`docs/SETUP_INFRA.md` §9), then enter the VAT credit (GHS 9,482.80) and the arrears notes in Settings › Setup, step 4, and the MoMo number and company phone in Settings › Company and rules (D-039); set up the weekly backup (`docs/BACKUP_RESTORE.md`); work through the setup wizard on staging; add a backup authenticator (`docs/ACCESS_RECOVERY.md`); SMTP/DNS setup, then the email schedule (§10); the NSP sheet layout (D-030); the December bonus layout before November (D-031); statement samples; user email list; leave defaults (A-038) |
@@ -185,6 +185,26 @@ It is modelled as Tier 3 (employee and employer), with a dated rate setting defa
 - **Add credit.** The statutory page's Credits tab has "+ Add credit" (Owner or Accountant).
 
 **D-041: The MoMo account name on invoices** is "MeLiNS Associates Limited", with the note "Some apps may display the name Kwasi Dadzie Ennison (Managing Director) for this wallet." Both are editable in Settings.
+
+### Timesheet improvements, 3 Oct 2026 (D-042 to D-045)
+
+**D-042: What the time was spent on.**
+- **Activity.** Every work entry needs an activity. It's chosen from a grouped list (Design, Drawings, Reports, Coordination, Site, Admin, as the Owner set out), or "Custom", where the person types their own. The Owner edits the list in Settings › Reference data › Timesheet activities; retiring an activity keeps its history.
+- **Custom activities** are listed on the "Hours by activity" page with how often they're used. The Owner can add one to the list, which moves every entry typed that way onto it: only the label changes, never hours, rates or approval.
+- **"What you did"** is required, at least 10 characters.
+- **Enforced in the database.** New and edited work entries need both; older entries are left as they were and report as "before activities were recorded". Entries waiting offline from before this change will be refused with the reason, and can be re-entered.
+
+**D-043: Entering time for someone else.**
+- "Logging for" defaults to the signed-in person. Only the Owner and the Project lead see the picker.
+- **Inside the person's 3-working-day window,** an on-behalf entry is recorded as entered by the Owner or Project lead (shown on the entry). It isn't a late entry, needs no reason, and counts as on time.
+- **From day 4** it's a late entry and needs a reason (brief §4): the Project lead up to day 10, the Owner at any time.
+- This changes the brief's rule, under which only the person could enter days 0 to 3.
+
+**D-044: Hours by activity.** A new page, `/team/activities` (Owner, Directors, Accountant, Project lead), shows hours by activity, by job or by person, filtered by date, job and person. Leave is left out.
+
+**D-045: The timesheet on a phone.**
+- **The header** shows the logo only. Sign out and My profile move into the ☰ menu.
+- **The form** shows "Today: X h logged" at the top, and the person's last 3 jobs as one-tap buttons. Time moves in 15-minute steps, with quick buttons for 1, 2, 4, 6 and 8 h, and a Save bar fixed to the bottom of the screen shows the time, e.g. "Save 1 h 15 min".
 
 ---
 

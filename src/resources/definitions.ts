@@ -375,6 +375,19 @@ export const taxCredits: ResourceDef = {
   ],
 }
 
+export const timesheetActivities: ResourceDef = {
+  key: 'timesheet_activities', table: 'timesheet_activities', title: 'Timesheet activities', singular: 'Activity',
+  description: 'The activity list on every timesheet entry, by group (D-042). Untick Active to retire one without losing its history. People can also type their own under Custom.',
+  orderBy: { column: 'sort_order' },
+  readRoles: [O, D, AC, AD, PL, S], createRoles: [O], editRoles: [O], importRoles: [O],
+  fields: [
+    { name: 'group_name', label: 'Group', type: 'text', required: true, list: true, help: 'e.g. Design, Drawings, Site' },
+    { name: 'name', label: 'Activity', type: 'text', required: true, list: true },
+    { name: 'sort_order', label: 'Order', type: 'number', default: 0, list: true, help: 'Groups and activities are listed in this order.' },
+    { name: 'is_active', label: 'Active', type: 'boolean', default: true, list: true },
+  ],
+}
+
 export const leaveEntitlements: ResourceDef = {
   key: 'leave_entitlements', table: 'leave_entitlements', title: 'Leave entitlements', singular: 'Entitlement',
   orderBy: { column: 'leave_year', ascending: false },
@@ -497,7 +510,7 @@ export const whtCertificates: ResourceDef = {
 
 export const RESOURCES: ResourceDef[] = [
   clients, referrers, suppliers, jobs, billingMilestones, jobHourBudgets, jobContracts,
-  openingInvoices, whtCertificates, taxCredits, expenses, recurringExpenses, transfers, accounts, statutoryLines, directorTransactions,
+  openingInvoices, whtCertificates, taxCredits, timesheetActivities, expenses, recurringExpenses, transfers, accounts, statutoryLines, directorTransactions,
   staffLoans, staff, staffCostHistory, leaveEntitlements, leaveTypes, publicHolidays, whtRates,
   expenseCategories, jobTypes,
 ]

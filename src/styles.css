@@ -268,3 +268,25 @@ a.bell .dot { position: absolute; top: 4px; right: 0; background: var(--red); co
 .bill-to { flex: 1; min-width: 0; line-height: 1.4; }
 table.invoice-facts { width: auto; flex: none; font-size: .9em; }
 table.invoice-facts td:first-child { color: var(--muted); padding-right: .75rem; white-space: nowrap; }
+
+/* Phone header: logo only; Sign out lives in the menu (D-045) */
+.brand-logo { height: 36px; width: auto; display: block; }
+.nav-mobile-only { display: flex; }
+.signout-menu { margin: 1rem .75rem; justify-content: flex-start; min-height: var(--tap); }
+@media (max-width: 899px) {
+  .brand .wordmark, .brand .brand-sub, .signout-top { display: none; }
+}
+@media (min-width: 900px) {
+  .brand-logo { display: none; }
+  .nav-mobile-only { display: none !important; }
+}
+
+/* Timesheet: today's total, and a Save bar fixed to the bottom on phones (D-042) */
+.today-logged { margin: 0; font-size: 1.05rem; }
+.timesheet { padding-bottom: 5rem; }
+.save-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 8; padding: .6rem 1rem calc(.6rem + env(safe-area-inset-bottom));
+  background: #fff; border-top: 1px solid var(--line); box-shadow: 0 -2px 10px rgba(0,0,0,.06); }
+@media (min-width: 900px) {
+  .timesheet { padding-bottom: 0; }
+  .save-bar { position: sticky; bottom: 0; padding: .6rem 0; box-shadow: none; border-top: 0; }
+}
