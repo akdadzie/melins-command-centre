@@ -404,7 +404,7 @@ export function SetupWizard() {
     { key: 'company', title: '1. Company and tax details', done: s.company, note: 'TIN, VAT number, address, payment details for invoices, Tier 2 trustee.',
       body: () => <SettingsForm groups={['company', 'payment']} defaultDate={GO_LIVE_MONTH} onSaved={refresh} /> },
     { key: 'accounts', title: '2. Accounts and opening balances', done: s.accounts,
-      note: `Each account's closing balance on 30 Sep 2026, with the opening date 1 Oct 2026 (D-029). GCB operating: GHS 83,115.12.${s.accountsDetail.length ? ` Entered: ${s.accountsDetail.map((a) => `${a.name} ${formatMoney(a.opening_balance)}`).join(', ')}.` : ''}`,
+      note: `Each account's closing balance on 30 Sep 2026, with the opening date 1 Oct 2026 (D-029). Operating account: Prudential Bank, A/C ending 0010 (GHS 83,115.12).${s.accountsDetail.length ? ` Entered: ${s.accountsDetail.map((a) => `${a.name} ${formatMoney(a.opening_balance)}`).join(', ')}.` : ''}`,
       body: () => <p><Link to="/accounts">Open Accounts</Link> and add each one.</p> },
     { key: 'tax', title: '3. Tax codes and rates', done: s.taxCodes, note: s.taxCodes && !s.taxConfirmed ? 'Rates entered; waiting for the Accountant to confirm them.' : 'VAT and each levy, with their order and basis. The Accountant confirms them.',
       body: () => <TaxCodesPanel /> },

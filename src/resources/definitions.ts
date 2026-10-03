@@ -79,7 +79,7 @@ export const accounts: ResourceDef = {
   orderBy: { column: 'name' },
   readRoles: [O, D, AC], createRoles: [O, AC], editRoles: [O, AC], importRoles: [O, AC],
   fields: [
-    { name: 'name', label: 'Name', type: 'text', required: true, list: true, help: 'e.g. "GCB operating", "MTN MoMo", "Petty cash"' },
+    { name: 'name', label: 'Name', type: 'text', required: true, list: true, help: 'e.g. "Prudential operating", "MTN MoMo", "Petty cash"' },
     { name: 'type', label: 'Type', type: 'select', required: true, list: true,
       options: opts([['bank', 'Bank'], ['mobile_money', 'Mobile money'], ['petty_cash', 'Petty cash'], ['other', 'Other']]) },
     { name: 'institution', label: 'Institution', type: 'text', list: true },
@@ -461,7 +461,12 @@ export const leaveTypes: ResourceDef = {
   fields: [
     { name: 'name', label: 'Name', type: 'text', required: true, list: true },
     { name: 'is_paid', label: 'Paid', type: 'boolean', default: true, list: true },
-    { name: 'uses_annual_balance', label: 'Uses annual balance', type: 'boolean', default: false, list: true },
+    { name: 'entitlement_kind', label: 'Entitlement', type: 'select', required: true, default: 'none', list: true,
+      options: opts([['annual', 'Annual: pro-rated, carried over'], ['capped', 'Yearly cap: full each year, not pro-rated'],
+                     ['per_event', 'Per event: set days each time, no yearly balance'], ['none', 'None (e.g. Unpaid)']]),
+      help: 'D-046. Default days below apply to Annual and yearly-cap types.' },
+    { name: 'event_entitled_days', label: 'Working days per event', type: 'number', min: 0,
+      help: 'Per-event types only, e.g. Maternity 60 (12 weeks), Paternity 5.' },
     { name: 'requires_document', label: 'Needs a supporting document', type: 'boolean', default: false },
     { name: 'document_after_days', label: 'Document needed after (days)', type: 'number', min: 0 },
     { name: 'default_entitled_days', label: 'Default days per year', type: 'number', min: 0, list: true },

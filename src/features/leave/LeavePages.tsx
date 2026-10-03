@@ -4,6 +4,7 @@
 //   /leave/calendar   who is away: names and dates only, never the type or reason
 //   /leave/balances   entitlements and balances; the Owner sets up each leave year
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { Link } from 'react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../../auth/AuthProvider'
 import { canWrite } from '../../auth/roles'
@@ -16,9 +17,11 @@ import * as R from '../../resources/definitions'
 import { ResourceList } from '../../resources/ResourceList'
 import { friendlyError } from '../../resources/useLookups'
 
-type LeaveType = { id: string; name: string; is_paid: boolean; uses_annual_balance: boolean; requires_document: boolean; document_after_days: number | null }
+type LeaveType = { id: string; name: string; is_paid: boolean; uses_annual_balance: boolean; requires_document: boolean; document_after_days: number | null
+  entitlement_kind: string; event_entitled_days: number | null }
 type Balance = { staff_id: string | null; full_name: string | null; leave_type_id: string | null; leave_type: string | null; leave_year: number | null
-  entitled: number | null; carried_over: number | null; taken: number | null; booked: number | null; available: number | null }
+  entitled: number | null; carried_over: number | null; taken: number | null; booked: number | null; available: number | null
+  entitlement_id: string | null; entitlement_kind: string | null }
 
 const addDays = (iso: string, n: number) => { const d = new Date(`${iso}T00:00:00Z`); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10) }
 const days = (n: number | null | undefined) => (n === null || n === undefined ? '—' : `${Number(n)} day${Number(n) === 1 ? '' : 's'}`)
@@ -28,7 +31,7 @@ function useLeaveTypes() {
   return useQuery({
     queryKey: ['leave-types'],
     staleTime: 300_000,
-    queryFn: async () => ((await supabase.from('leave_types').select('id, name, is_paid, uses_annual_balance, requires_document, document_after_days')
+    queryFn: async () => ((await supabase.from('leave_types').select('id, name, is_paid, uses_annual_balance, requires_document, document_after_days, entitlement_kind, event_entitled_days')
       .eq('is_active', true).order('sort_order')).data ?? []) as LeaveType[],
   })
 }
@@ -85,7 +88,7 @@ function RequestForm({ staffId, staffOptions, onClose }: {
   })
   const workingDays = preview.data ?? null
   const bal = balances.data?.find((b) => b.leave_type_id === typeId && b.leave_year === Number(start.slice(0, 4)))
-  const overBalance = type?.uses_annual_balance && workingDays !== null && (bal?.available ?? 0) - workingDays < 0
+  const overBalance = (type?.entitlement_kind === 'annual' || type?.entitlement_kind === 'capped') && workingDays !== null && (bal?.available ?? 0) - workingDays < 0
   const ownerOwn = role === 'owner' && person === profile?.staff_id
 
   async function submit(e: FormEvent) {
@@ -121,13 +124,19 @@ function RequestForm({ staffId, staffOptions, onClose }: {
           {workingDays === null ? <span className="muted">Choose the dates.</span>
             : workingDays === 0 ? <span className="form-error">These dates have no working days (weekends and public holidays don't count).</span>
             : <><strong>{days(workingDays)}</strong> of leave (weekends and public holidays don't count).</>}
-          {type?.uses_annual_balance && bal && <> Annual balance: {days(bal.available)} available.</>}
+          {type?.entitlement_kind === 'annual' && bal && <> Annual balance: {days(bal.available)} available.</>}
+          {type?.entitlement_kind === 'capped' && bal && <> {type.name} this year: used {Number(bal.taken) + Number(bal.booked)} of {Number(bal.entitled)} days.</>}
         </p>
         {overBalance && (
-          <p className="warn-text small">This takes the annual balance below zero. Only the Owner can approve it as {type?.name} leave; otherwise it's approved as Unpaid leave.</p>
+          <p className="warn-text small">{type?.entitlement_kind === 'annual' ? 'This takes the annual balance below zero.' : `This goes over the yearly ${type?.name} leave limit.`} Only the Owner can approve it as {type?.name} leave; otherwise it's approved as Unpaid leave.</p>
         )}
-        {type?.requires_document && (
-          <p className="muted small">A supporting document is needed{type.document_after_days ? ` for more than ${type.document_after_days} days` : ''} (e.g. a medical certificate). Give it to your approver; uploading it here comes with document storage.</p>
+        {type?.entitlement_kind === 'per_event' && (
+          <p className={`small ${workingDays && type.event_entitled_days && workingDays > Number(type.event_entitled_days) ? 'form-error' : 'muted'}`}>
+            {type.name} leave is up to {Number(type.event_entitled_days)} working days for each event{type.name === 'Maternity' ? ' (12 weeks)' : ''}.
+            {type.requires_document && ' Attach the supporting document (e.g. a medical or birth certificate) to the request under My leave: it can only be approved once it\'s attached.'}</p>
+        )}
+        {type?.requires_document && type.entitlement_kind !== 'per_event' && (
+          <p className="muted small">A supporting document is needed{type.document_after_days ? ` for more than ${type.document_after_days} days` : ''} (e.g. a medical certificate). Attach it to the request under My leave.</p>
         )}
         <label>Reason (optional)<input value={reason} onChange={(e) => setReason(e.target.value)} maxLength={200} />
           <span className="help">Only you, your approver, the Owner, the Directors and the Accountant see this. Never write medical details.</span></label>
@@ -149,8 +158,13 @@ function BalanceTiles({ rows }: { rows: Balance[] }) {
       {rows.map((b) => (
         <div key={`${b.leave_type_id}-${b.leave_year}`} className="stat">
           <span className="label">{b.leave_type} {b.leave_year}</span>
-          <strong className={Number(b.available) < 0 ? 'bad' : undefined}>{days(b.available)}</strong>
-          <span className="muted small">available of {Number(b.entitled) + Number(b.carried_over)} ({Number(b.carried_over)} carried over) · {Number(b.taken)} taken · {Number(b.booked)} booked</span>
+          {b.entitlement_kind === 'capped' ? <>
+            <strong className={Number(b.available) < 0 ? 'bad' : undefined}>used {Number(b.taken) + Number(b.booked)} of {Number(b.entitled)}</strong>
+            <span className="muted small">days this year{Number(b.booked) ? ` (${Number(b.booked)} booked ahead)` : ''}</span>
+          </> : <>
+            <strong className={Number(b.available) < 0 ? 'bad' : undefined}>{days(b.available)}</strong>
+            <span className="muted small">available of {Number(b.entitled) + Number(b.carried_over)} ({Number(b.carried_over)} carried over) · {Number(b.taken)} taken · {Number(b.booked)} booked</span>
+          </>}
         </div>
       ))}
     </div>
@@ -225,7 +239,7 @@ type Req = {
   id: string; staff_id: string; leave_type_id: string; start_date: string; end_date: string; working_days: number
   reason: string | null; status: string; decision_note: string | null; decided_at: string | null; document_path: string | null
   staff: { full_name: string; approver_staff_id: string | null } | null
-  type: { name: string; uses_annual_balance: boolean; requires_document: boolean; document_after_days: number | null } | null
+  type: { name: string; uses_annual_balance: boolean; requires_document: boolean; document_after_days: number | null; entitlement_kind: string } | null
 }
 type ReqTab = 'requested' | 'upcoming' | 'past' | 'closed'
 
@@ -241,7 +255,7 @@ export function LeaveRequestsPage() {
     queryKey: ['leave-requests', 'all'],
     queryFn: async () => {
       const { data, error } = await supabase.from('leave_requests')
-        .select('id, staff_id, leave_type_id, start_date, end_date, working_days, reason, status, decision_note, decided_at, document_path, staff:staff(full_name, approver_staff_id), type:leave_types(name, uses_annual_balance, requires_document, document_after_days)')
+        .select('id, staff_id, leave_type_id, start_date, end_date, working_days, reason, status, decision_note, decided_at, document_path, staff:staff(full_name, approver_staff_id), type:leave_types(name, uses_annual_balance, requires_document, document_after_days, entitlement_kind)')
         .order('start_date', { ascending: false }).limit(2000)
       if (error) throw error
       return (data ?? []) as unknown as Req[]
@@ -292,7 +306,7 @@ export function LeaveRequestsPage() {
           <thead><tr><th>Person</th><th>Type</th><th>Dates</th><th className="num">Days</th><th>Balance</th><th>Status</th><th /></tr></thead>
           <tbody>{rows.map((r) => {
             const bal = balanceFor(r)
-            const after = bal && r.type?.uses_annual_balance ? Number(bal.available) - (r.status === 'requested' ? r.working_days : 0) : null
+            const after = bal && (r.type?.entitlement_kind === 'annual' || r.type?.entitlement_kind === 'capped') ? Number(bal.available) - (r.status === 'requested' ? r.working_days : 0) : null
             const below = after !== null && after < 0
             return (
               <tr key={r.id} className={below && r.status === 'requested' ? 'row-bad' : undefined}>
@@ -428,7 +442,26 @@ export function LeaveBalancesPage() {
   const [setupYear, setSetupYear] = useState(String(Number(todayAccra().slice(0, 4)) + (Number(todayAccra().slice(5, 7)) >= 11 ? 1 : 0)))
   const action = useAction()
   const [done, setDone] = useState<string | null>(null)
+  const [nothing, setNothing] = useState<{ text: string; link?: string; linkText?: string } | null>(null)
+  const [deleting, setDeleting] = useState<Balance | null>(null)
   const rows = (balances.data ?? []).filter((b) => b.leave_year === shown)
+
+  /** "0 created": say why (D-048). */
+  async function whyNothing(y: number): Promise<null> {
+    const { data: types } = await supabase.from('leave_types').select('name, entitlement_kind, default_entitled_days').eq('is_active', true)
+    const usable = (types ?? []).filter((t) => (t.entitlement_kind === 'annual' || t.entitlement_kind === 'capped') && t.default_entitled_days !== null)
+    if (!usable.length) {
+      setNothing({ text: 'No leave types have default days set (Annual, Sick, Compassionate and Study/exam need them).',
+        link: '/settings?tab=data', linkText: 'Go to Settings › Reference data › Leave types' })
+      return null
+    }
+    const yStart = `${y}-01-01`, yEnd = `${y}-12-31`
+    const { data: staff } = await supabase.from('staff').select('id, start_date, end_date').eq('is_active', true)
+    const employed = (staff ?? []).filter((s) => s.start_date <= yEnd && (!s.end_date || s.end_date >= yStart))
+    if (!employed.length) { setNothing({ text: `No active staff are employed in ${y}.`, link: '/team/staff', linkText: 'Check the staff start and end dates' }); return null }
+    setNothing({ text: `Everyone employed in ${y} already has entitlements for ${usable.map((t) => t.name).join(', ')}. Change individual figures on the Entitlements tab; a new joiner gets theirs when you run this again.` })
+    return null
+  }
 
   return (
     <section>
@@ -438,15 +471,17 @@ export function LeaveBalancesPage() {
       {role === 'owner' && (
         <div className="panel narrow" style={{ marginBottom: '1rem' }}>
           <h3>Set up a leave year</h3>
-          <p className="small muted">Gives everyone each leave type's default days (set them under Settings › Leave types), pro-rated for anyone joining or leaving
-            during the year, and carries over unused annual leave up to the Settings limit. Existing entitlements are left as they are; change individual
-            figures (e.g. national service postings) on the Entitlements tab.</p>
+          <p className="small muted">Gives everyone each leave type's default days (Settings › Reference data › Leave types). Annual leave is pro-rated for anyone
+            joining or leaving during the year, and unused annual leave carries over up to the Settings limit. Sick, Compassionate and Study/exam get their full
+            yearly cap. Maternity and Paternity have no yearly balance: each request grants the set days for that event. Existing entitlements are left as they
+            are; change individual figures (e.g. national service postings) on the Entitlements tab.</p>
           <form className="row-actions" onSubmit={(e) => {
-            e.preventDefault(); setDone(null)
+            e.preventDefault(); setDone(null); setNothing(null)
             action.run(async () => {
               const { data, error } = await supabase.rpc('set_up_leave_year', { p_year: Number(setupYear) })
               if (error) return friendlyError(error)
-              setDone(`${data} entitlement${data === 1 ? '' : 's'} created for ${setupYear}.`)
+              setDone(data ? `${data} entitlement${data === 1 ? '' : 's'} created for ${setupYear}.` : null)
+              if (!data) return await whyNothing(Number(setupYear))
               setYear(Number(setupYear))
               await qc.invalidateQueries({ queryKey: ['leave-balances'] })
               await qc.invalidateQueries({ queryKey: ['resource', 'leave_entitlements'] })
@@ -457,6 +492,7 @@ export function LeaveBalancesPage() {
           </form>
           {action.error && <p className="form-error">{action.error}</p>}
           {done && <p className="form-ok">{done}</p>}
+          {nothing && <p className="warn-text small">Nothing was created for {setupYear}. {nothing.text}{nothing.link && <> <Link to={nothing.link}>{nothing.linkText}</Link>.</>}</p>}
         </div>
       )}
       <Tabs value={tab} onChange={setTab} tabs={[{ key: 'balances', label: 'Balances' }, { key: 'entitlements', label: 'Entitlements' }]} />
@@ -467,18 +503,39 @@ export function LeaveBalancesPage() {
         )}
         {rows.length === 0 ? <p className="empty">No entitlements for {shown} yet.</p> : (
           <div className="table-wrap"><table>
-            <thead><tr><th>Person</th><th>Type</th><th className="num">Entitled</th><th className="num">Carried over</th><th className="num">Taken</th><th className="num">Booked</th><th className="num">Available</th></tr></thead>
+            <thead><tr><th>Person</th><th>Type</th><th className="num">Entitled</th><th className="num">Carried over</th><th className="num">Taken</th><th className="num">Booked</th><th className="num">Available</th>{role === 'owner' && <th />}</tr></thead>
             <tbody>{rows.map((b) => (
               <tr key={`${b.staff_id}-${b.leave_type_id}`} className={Number(b.available) < 0 ? 'row-bad' : undefined}>
                 <td>{b.full_name}</td><td>{b.leave_type}</td>
                 <td className="num">{Number(b.entitled)}</td><td className="num">{Number(b.carried_over)}</td>
                 <td className="num">{Number(b.taken)}</td><td className="num">{Number(b.booked)}</td>
-                <td className="num"><strong>{Number(b.available)}</strong></td>
+                <td className="num"><strong>{b.entitlement_kind === 'capped' ? `used ${Number(b.taken) + Number(b.booked)} of ${Number(b.entitled)}` : Number(b.available)}</strong></td>
+                {role === 'owner' && <td>{Number(b.taken) + Number(b.booked) === 0 && canWrite(role) &&
+                  <button className="link" onClick={() => setDeleting(b)}>Delete</button>}</td>}
               </tr>
             ))}</tbody>
           </table></div>
         )}
+        {role === 'owner' && <p className="muted small">An entitlement can be deleted only while no leave is taken or booked against it; the deletion is logged.</p>}
       </>}
+      {deleting && (
+        <Dialog title="Delete this entitlement?" onClose={() => setDeleting(null)}>
+          <p>{deleting.full_name}: {deleting.leave_type} {deleting.leave_year}, {Number(deleting.entitled)} days{Number(deleting.carried_over) ? ` + ${Number(deleting.carried_over)} carried over` : ''}.</p>
+          <p className="muted small">Nothing is taken or booked against it. The deletion is recorded in the audit log.</p>
+          {action.error && <p className="form-error">{action.error}</p>}
+          <div className="form-actions">
+            <button className="primary" disabled={action.busy} onClick={() => action.run(async () => {
+              const { data, error } = await supabase.from('leave_entitlements').delete().eq('id', deleting.entitlement_id!).select('id')
+              if (error) return friendlyError(error)
+              if (!data?.length) return 'Nothing was deleted: only the Owner can delete entitlements.'
+              setDeleting(null)
+              await qc.invalidateQueries({ queryKey: ['leave-balances'] })
+              await qc.invalidateQueries({ queryKey: ['resource', 'leave_entitlements'] })
+            })}>Delete</button>
+            <button onClick={() => setDeleting(null)}>Cancel</button>
+          </div>
+        </Dialog>
+      )}
     </section>
   )
 }

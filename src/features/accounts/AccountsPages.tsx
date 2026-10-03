@@ -495,7 +495,7 @@ function UploadStatement({ account, month, onClose, onSaved }: { account: { id: 
   return (
     <Dialog title={`Upload statement: ${account.name}`} onClose={onClose}>
       <form className="stack" onSubmit={save}>
-        <p className="muted small">Export the statement from internet banking as CSV. The GCB and MTN MoMo formats get their own readers once samples arrive; until then any CSV with Date, Description and Amount (or Debit and Credit) headings works.</p>
+        <p className="muted small">Export the statement from internet banking as CSV. The Prudential Bank and MTN MoMo formats get their own readers once samples arrive; until then any CSV with Date, Description and Amount (or Debit and Credit) headings works.</p>
         <label className="file-picker">{fileName || 'Choose the statement CSV'}<input type="file" accept=".csv,text/csv" onChange={(e) => onFile(e.target.files?.[0])} /></label>
         {parsed && <>
           {parsed.errors.length > 0 ? <div className="form-error"><ul className="checks">{parsed.errors.slice(0, 10).map((x) => <li key={x}>{x}</li>)}</ul></div>

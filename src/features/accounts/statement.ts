@@ -1,5 +1,5 @@
 // Reads a bank or mobile money statement exported as CSV (A-039). Until the
-// GCB and MTN MoMo samples arrive (D-025), any statement whose heading row
+// Prudential Bank and MTN MoMo samples arrive (D-025), any statement whose heading row
 // names a date, a description and either an amount or debit/credit columns can
 // be read. Statements often have a few lines of account details above the
 // headings, so the heading row is found, not assumed. Pure; unit-tested.

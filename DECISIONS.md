@@ -13,7 +13,7 @@ Every decision, assumption and change made during the build goes here. Read this
 
 | Item | State |
 |---|---|
-| Current phase | **Phase A: screens** (2 Oct 2026). Migrations through 1600 are applied to staging (checked 2 Oct 2026, with all three Edge Functions deployed and both reminder schedules active). **1700 (documents), 1800 (D-032 to D-036), 1900 (D-037 to D-041) and 2000 (timesheet activities, D-042 to D-044) are waiting to be pushed.** Built: every Phase A route (no placeholders left), Settings with the setup wizard, document uploads, reminders and email sender, and the weekly backup. **Next:** the NSP import (D-030, waiting for the sheet layout), then the Phase A acceptance run on staging and the production deploy. |
+| Current phase | **Phase A: screens** (2 Oct 2026). Migrations through 1600 are applied to staging (checked 2 Oct 2026, with all three Edge Functions deployed and both reminder schedules active). **1700 to 2000 are applied to staging (3 Oct 2026; the types are regenerated from it). 2100 (leave and setup fixes, D-046 to D-050) is waiting to be pushed.** Built: every Phase A route (no placeholders left), Settings with the setup wizard, document uploads, reminders and email sender, and the weekly backup. **Next:** the NSP import (D-030, waiting for the sheet layout), then the Phase A acceptance run on staging and the production deploy. |
 | Brief | PROJECT_BRIEF.md = `MeLiNS_Command_Centre_Build_Prompt_v2.txt`, revision 2.4 (28 Sep 2026), copied unchanged |
 | Repository | https://github.com/akdadzie/melins-command-centre (private); local folder `C:\dev\melins-ims` |
 | Waiting on Owner | Push migrations 1700 and 1800 (`docs/SETUP_INFRA.md` §9), then enter the VAT credit (GHS 9,482.80) and the arrears notes in Settings › Setup, step 4, and the MoMo number and company phone in Settings › Company and rules (D-039); set up the weekly backup (`docs/BACKUP_RESTORE.md`); work through the setup wizard on staging; add a backup authenticator (`docs/ACCESS_RECOVERY.md`); SMTP/DNS setup, then the email schedule (§10); the NSP sheet layout (D-030); the December bonus layout before November (D-031); statement samples; user email list; leave defaults (A-038) |
@@ -106,7 +106,7 @@ It is modelled as Tier 3 (employee and employer), with a dated rate setting defa
 
 #### Files
 **D-025 (Q-21, Q-22): Outstanding from the Owner.**
-- Anonymised GCB and MTN MoMo statement samples → `private/` (only the statement import waits for these).
+- Anonymised Prudential Bank and MTN MoMo statement samples → `private/` (only the statement import waits for these). *(Corrected 3 Oct 2026: the operating account is at Prudential Bank, not GCB; D-029.)*
 - Logo and letterhead: **received 28 Sep 2026** (`MeLiNS Logo rev (2).jpg`, `MeLiNS_Letterhead_1.docx`), committed as brand assets.
 - User email list: still outstanding (only user invites wait for it).
 
@@ -126,8 +126,8 @@ It is modelled as Tier 3 (employee and employer), with a dated rate setting defa
 - Built in migration 1300.
 
 **D-029: Go-live.** Opening balances are as at **30 Sep 2026**, so **October 2026 is the first month run in the system** and the first month closed in it.
-- GCB operating account: closing balance **GHS 83,115.12** on 30 Sep 2026, per the bank statement.
-- An account's opening balance is the balance at the start of its opening date. So each account is entered with opening date **1 Oct 2026** and the 30 Sep closing balance (GCB: 83,115.12). Ledger entries count from 1 Oct, so nothing dated 30 Sep or earlier changes the balance, and no September reconciliation is needed.
+- Operating account: **Prudential Bank, Taifa Branch, A/C 0392000680010** (entered in the system with last 4 digits 0010). Closing balance **GHS 83,115.12** on 30 Sep 2026, per the bank statement. *(Corrected 3 Oct 2026: this first said GCB.)*
+- An account's opening balance is the balance at the start of its opening date. So each account is entered with opening date **1 Oct 2026** and the 30 Sep closing balance (Prudential Bank operating: 83,115.12). Ledger entries count from 1 Oct, so nothing dated 30 Sep or earlier changes the balance, and no September reconciliation is needed.
 - The other accounts (MTN MoMo, petty cash, reserve) are entered the same way, with their own 30 Sep balances, in the setup wizard. Opening receivables are the invoices still unpaid at 30 Sep (A-024), and statutory arrears are those outstanding at 30 Sep.
 
 **D-030 (Q-26): The NSP import is built last in Phase A.** The Owner will send the NSP sheet's layout (figures blanked). Until then the NSP sheet uses the staff sheet's column map.
@@ -205,6 +205,23 @@ It is modelled as Tier 3 (employee and employer), with a dated rate setting defa
 **D-045: The timesheet on a phone.**
 - **The header** shows the logo only. Sign out and My profile move into the ☰ menu.
 - **The form** shows "Today: X h logged" at the top, and the person's last 3 jobs as one-tap buttons. Time moves in 15-minute steps, with quick buttons for 1, 2, 4, 6 and 8 h, and a Save bar fixed to the bottom of the screen shows the time, e.g. "Save 1 h 15 min".
+
+### Leave and setup fixes, 3 Oct 2026 (D-046 to D-050)
+
+**D-046: How each kind of leave is entitled.** Each leave type has an entitlement kind (Settings › Reference data › Leave types):
+- **Annual** (Annual leave): a yearly balance, pro-rated by the days employed in the leave year and carried over up to the Settings limit. The only kind that's pro-rated or carried over.
+- **Yearly cap** (Sick, Compassionate/bereavement, Study/exam): the full cap each year, not pro-rated and not carried over. Shown as "used X of N". As with Annual leave, going over the cap needs the Owner, or the request is approved as Unpaid.
+- **Per event** (Maternity, Paternity): no yearly balance and not in the balances. Each request grants up to the set working days for that event: Maternity 60 (12 weeks), Paternity 5; both editable. A supporting document is required, and the request can't be approved until it's attached.
+- **None** (Unpaid, Other): no entitlement.
+- "Set up a leave year" now follows these rules, so it pro-rates Annual leave only. Any Maternity or Paternity entitlement rows already created were removed.
+
+**D-047: Deleting an entitlement.** The Owner can delete an entitlement that has no leave taken or booked against it (requested, approved or taken). The deletion is in the audit log. One that has been used can't be deleted; its days can be changed instead.
+
+**D-048: "Set up a leave year" explains when it creates nothing.** It says why, with a link to the fix: no leave types have default days (→ Settings › Reference data › Leave types), no active staff are employed that year, or everyone already has their entitlements.
+
+**D-049: Fees received, on the same basis as fees invoiced.** The Home "Fees" tile showed invoiced net of VAT but received including VAT and WHT. "Received" is now the net fee received: each confirmed payment's share of the net fee on the invoices it settles, with cash, WHT and VAT withheld all counted, since they settle the invoice. So a fully paid invoice counts as its net fee in both figures. The Directors' monthly summary keeps "received" as confirmed cash, as labelled there.
+
+**D-050: Company phone.** **+233 56 071 2012** (supplied by the Owner) is the company phone in the invoice header. It's a setting (Settings › Company and rules), filled in by migration 2100.
 
 ---
 
@@ -361,7 +378,7 @@ Forms and CSV import share one parser (`coerce.ts`), so any row that imports is 
 - **Supporting documents.** A request whose type needs one is flagged to the approver. Uploading it comes with document storage, like other attachments.
 
 **A-039: Statements and reconciliation.**
-- **Reading statements.** Until the GCB and MTN MoMo samples arrive (D-025), the Accountant uploads any CSV export whose heading row has a date and either an amount or debit and credit columns. Account details above the headings are skipped, as are opening, closing and total rows. Dates are day-first only. The bank-specific readers replace this once the samples arrive.
+- **Reading statements.** Until the Prudential Bank and MTN MoMo samples arrive (D-025), the Accountant uploads any CSV export whose heading row has a date and either an amount or debit and credit columns. Account details above the headings are skipped, as are opening, closing and total rows. Dates are day-first only. The bank-specific readers replace this once the samples arrive.
 - **Checking a statement.** On upload, the screen checks that opening balance + lines = closing balance and warns if not. Lines outside the chosen period are left out.
 - **Matching.** A statement line is matched to a movement in the books (a confirmed receipt, an expense, a payment…). The screen suggests movements with the same amount within 7 days that aren't already matched. A line that isn't in the books is either explained, or (for money in) handed to Admin as a "Record this receipt" task, or recorded at once by the Accountant.
 - **Reconciling.** The month's reconciliation compares the statement's closing balance with the calculated balance at month end. It can't close while any statement line up to that date is unmatched, or while a difference is unexplained (acceptance 13). Movements in the books but not on the statement are listed for the Accountant to follow up.

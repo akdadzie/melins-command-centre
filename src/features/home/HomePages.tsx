@@ -117,7 +117,7 @@ function MoneyPanel({ showApprovals }: { showApprovals: boolean }) {
         <Tile to="/invoices" label="Owed to MeLiNS" value={formatMoney(m.receivables.total)}
           note={['0-30', '31-60', '61-90', '90+'].map((b) => `${b}: ${formatMoney(m.receivables.ageing[b] ?? 0, false)}`).join(' · ')} />
         <Tile to="/invoices" label={`Fees ${monthName(monthFirst(todayAccra()))}`} value={formatMoney(m.fees_this_month.invoiced)}
-          note={<>invoiced · {formatMoney(m.fees_this_month.received)} received{target ? <> · target {formatMoney(target)}</> : null}</>}
+          note={<>invoiced · {formatMoney(m.fees_this_month.received)} received (both net of VAT){target ? <> · target {formatMoney(target)}</> : null}</>}
           tone={target && m.fees_this_month.invoiced < target ? 'warn' : undefined} />
       </div>
 

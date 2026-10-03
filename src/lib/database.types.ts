@@ -2274,6 +2274,8 @@ export type Database = {
         Row: {
           default_entitled_days: number | null
           document_after_days: number | null
+          entitlement_kind: string
+          event_entitled_days: number | null
           id: string
           is_active: boolean
           is_paid: boolean
@@ -2285,6 +2287,8 @@ export type Database = {
         Insert: {
           default_entitled_days?: number | null
           document_after_days?: number | null
+          entitlement_kind?: string
+          event_entitled_days?: number | null
           id?: string
           is_active?: boolean
           is_paid?: boolean
@@ -2296,6 +2300,8 @@ export type Database = {
         Update: {
           default_entitled_days?: number | null
           document_after_days?: number | null
+          entitlement_kind?: string
+          event_entitled_days?: number | null
           id?: string
           is_active?: boolean
           is_paid?: boolean
@@ -6267,6 +6273,8 @@ export type Database = {
           booked: number | null
           carried_over: number | null
           entitled: number | null
+          entitlement_id: string | null
+          entitlement_kind: string | null
           full_name: string | null
           leave_type: string | null
           leave_type_id: string | null

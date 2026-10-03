@@ -76,7 +76,7 @@ begin
   perform tests.eq(s.payment_momo_account_name, 'MeLiNS Associates Limited', 'D-041: the MoMo account name');
   perform tests.ok(s.payment_momo_note like '%Kwasi Dadzie Ennison (Managing Director)%', 'D-041: with the wallet-name note');
   perform tests.eq(s.company_website, 'www.themelins.com', 'D-039: the website for the header');
-  perform tests.ok(s.payment_momo_number is null and s.company_phone is null, 'D-039: the MoMo number and phone are left for the Owner (not guessed)');
+  perform tests.ok(s.payment_momo_number is null, 'D-039: the MoMo number is left for the Owner (not guessed; the phone came later, D-050)');
 end $$;
 select tests.login('admin@t');
 set role authenticated;

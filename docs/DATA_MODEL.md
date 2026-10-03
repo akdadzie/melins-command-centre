@@ -25,6 +25,7 @@ The schema, RLS, triggers and reference data live in `supabase/migrations`, appl
 | `1700_documents` | Private `documents` bucket; a file is visible to whoever can read its record (A-045) |
 | `1900_invoice_and_arrears_fixes` | Allocations refitted when a payment changes (D-037); WHT rate re-read on drafts (D-038); invoice contact and payment settings, client address and contact (D-039); statutory payment plans (D-040) |
 | `2000_timesheet_activities` | Activity list, activity and description required, on-behalf entries inside the window not late, hours-by-activity report, promoting custom activities (D-042 to D-044) |
+| `2100_leave_and_setup_fixes` | Leave entitlement kinds (annual, yearly cap, per event, none), per-event limits and documents, yearly caps on approval, deleting unused entitlements, net fees received, company phone (D-046 to D-050) |
 | `1800_staging_fixes` | Tax credits with automatic VAT offsets and GRA-approved offsets (D-032); go-live date setting and floors (D-034); reconciliation from the opening month (D-033); arrears notes in the Money panel (D-036) |
 
 ## How it fits together
@@ -98,11 +99,12 @@ pg_ctl -D <dir> -o "-p 54329" start
 | `95_test_staging_fixes.sql` | D-032 to D-036 |
 | `96_test_invoice_fixes.sql` | D-037 to D-041 |
 | `97_test_timesheet_activities.sql` | D-042 to D-044 |
+| `98_test_leave_fixes.sql` | D-046 to D-050 |
 
 Items 1, 2 and 28 (domain and email, routes, CSV and backups) are tested at the front-end and infrastructure stage. The same acceptance tests are re-run on staging before production.
 
 ## Not in the schema yet (by design)
 
-- **Statement parsers for GCB and MTN MoMo:** waiting for the samples (D-025).
+- **Statement parsers for Prudential Bank and MTN MoMo:** waiting for the samples (D-025).
 - **Payslip PDF Edge Function.**
 - **Phase B/C tables** (A-006).
