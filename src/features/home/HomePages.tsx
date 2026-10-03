@@ -61,14 +61,18 @@ function TaskList({ items, empty }: { items: { key: string; to: string; text: Re
 // Money panel (Owner, Directors, Accountant)
 // ---------------------------------------------------------------------------
 interface MoneyPanelData {
-  accounts: { id: string; name: string; purpose: string; balance: number; last_reconciled_month: string | null; difference: number | null }[]
+  accounts: { id: string; name: string; purpose: string; balance: number; last_reconciled_month: string | null; difference: number | null; opening_date: string }[]
   reserved_for_commitments: number
   committed_cash: number
   available_cash: number
   monthly_running_cost: { calculated: number; override: number | null; payroll: number; recurring: number; prepayments: number }
   weeks_of_cover: number | null
   receivables: { total: number; ageing: Record<string, number>; top_debtors: { name: string; amt: number }[]; reported_unconfirmed: number; retention_held: number }
-  statutory: { due_next_30_days: { id: string; label: string; due_date: string; outstanding: number }[]; arrears_by_type: Record<string, number> }
+  statutory: {
+    due_next_30_days: { id: string; label: string; due_date: string; outstanding: number }[]
+    arrears: { id: string; label: string; outstanding: number; notes: string | null; credit_applied: number }[]
+    credits: { id: string; authority: string; description: string; amount: number; applied: number; remaining: number; auto_offset_type: string | null }[]
+  }
   vat_this_month: number
   wht_credits_this_year: { total: number; certificates_to_collect: number }
   ready_to_invoice_count: number
@@ -97,7 +101,7 @@ function MoneyPanel({ showApprovals }: { showApprovals: boolean }) {
   const cash = m.accounts.filter((a) => a.purpose !== 'reserve')
   const reserve = m.accounts.filter((a) => a.purpose === 'reserve')
   const lastMonth = shiftMonth(monthFirst(todayAccra()), -1)
-  const arrears = Object.entries(m.statutory.arrears_by_type)
+  const lastMonthEnd = addDays(monthFirst(todayAccra()), -1)
   const target = m.fees_this_month.target
 
   return (
@@ -105,8 +109,10 @@ function MoneyPanel({ showApprovals }: { showApprovals: boolean }) {
       <div className="stats">
         <Tile to="/accounts" label="Available cash" value={formatMoney(m.available_cash)}
           note={<>confirmed operating cash − {formatMoney(m.reserved_for_commitments)} reserved − {formatMoney(m.committed_cash)} committed</>} />
-        <Tile to="/accounts" label="Weeks of cover" value={cover === null ? '—' : `${cover} weeks`} tone={coverTone}
-          note={<>running cost {formatMoney(running.override ?? running.calculated)} a month{running.override !== null && <> (override; calculated {formatMoney(running.calculated)})</>}</>} />
+        <Tile to={cover === null ? '/payroll' : '/accounts'} label="Weeks of cover" value={cover === null ? 'Not yet' : `${cover} weeks`} tone={coverTone}
+          note={cover === null
+            ? 'Add a payroll run or recurring expenses to calculate.'
+            : <>running cost {formatMoney(running.override ?? running.calculated)} a month{running.override !== null && <> (override; calculated {formatMoney(running.calculated)})</>}</>} />
         <Tile to="/invoices" label="Owed to MeLiNS" value={formatMoney(m.receivables.total)}
           note={['0-30', '31-60', '61-90', '90+'].map((b) => `${b}: ${formatMoney(m.receivables.ageing[b] ?? 0, false)}`).join(' · ')} />
         <Tile to="/invoices" label={`Fees ${monthName(monthFirst(todayAccra()))}`} value={formatMoney(m.fees_this_month.invoiced)}
@@ -120,7 +126,7 @@ function MoneyPanel({ showApprovals }: { showApprovals: boolean }) {
           <table className="compact"><tbody>
             {cash.map((a) => (
               <tr key={a.id}><td><Link to={`/accounts/${a.id}`}>{a.name}</Link>
-                {(!a.last_reconciled_month || a.last_reconciled_month < lastMonth) && <span className="warn-text small"> not reconciled for {monthName(lastMonth)}</span>}
+                {a.opening_date <= lastMonthEnd && (!a.last_reconciled_month || a.last_reconciled_month < lastMonth) && <span className="warn-text small"> not reconciled for {monthName(lastMonth)}</span>}
                 {a.difference !== null && Math.abs(a.difference) > 0.005 && <span className="warn-text small"> statement differs by {formatMoney(a.difference)}</span>}</td>
                 <td><Money value={a.balance} /></td></tr>
             ))}
@@ -148,7 +154,18 @@ function MoneyPanel({ showApprovals }: { showApprovals: boolean }) {
               <tr key={s.id}><td><Link to="/tax/statutory">{s.label}</Link> <span className="muted small">due {formatDate(s.due_date)}</span></td><td><Money value={s.outstanding} /></td></tr>
             ))}
             {m.statutory.due_next_30_days.length === 0 && <tr><td className="muted">Nothing due in the next 30 days.</td></tr>}
-            {arrears.map(([label, amt]) => <tr key={label} className="row-bad"><td><Link to="/tax/statutory">{label} arrears</Link></td><td><Money value={amt} /></td></tr>)}
+            {m.statutory.arrears.map((a) => (
+              <tr key={a.id} className="row-bad"><td><Link to="/tax/statutory">{a.label} arrears</Link>
+                {a.notes && <span className="muted small"> · {a.notes}</span>}
+                {a.credit_applied > 0 && <span className="muted small"> · {formatMoney(a.credit_applied)} offset by credit</span>}</td>
+                <td><Money value={a.outstanding} /></td></tr>
+            ))}
+            {m.statutory.credits.map((c) => (
+              <tr key={c.id}><td><Link to="/tax/statutory?tab=credits">{c.authority} owes MeLiNS: {c.description}</Link>
+                <span className="muted small"> · {c.auto_offset_type === 'vat' ? 'offset against VAT returns as they fall due' : 'apply with GRA\'s approval'}
+                  {c.applied > 0 && `, ${formatMoney(c.applied)} of ${formatMoney(c.amount)} used`}</span></td>
+                <td className="ok-text"><Money value={c.remaining} /></td></tr>
+            ))}
             <tr><td><Link to={`/tax/vat/${todayAccra().slice(0, 7)}`}>VAT position this month</Link> <span className="muted small">output − claimable input</span></td><td><Money value={m.vat_this_month} /></td></tr>
             <tr><td><Link to="/receipts/wht">WHT credits this year</Link> <span className="muted small">{m.wht_credits_this_year.certificates_to_collect} certificate(s) to collect</span></td><td><Money value={m.wht_credits_this_year.total} /></td></tr>
           </tbody></table>

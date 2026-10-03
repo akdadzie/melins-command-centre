@@ -23,6 +23,7 @@ The schema, RLS, triggers and reference data live in `supabase/migrations`, appl
 | `1500_close_screens` | Admin sees only its own close blockers; `entries_to_review()` queue for the Accountant (A-040) |
 | `1600_reminders` | Daily and 17:00 reminder routines scheduled with pg_cron; reminders sent once each (A-042) |
 | `1700_documents` | Private `documents` bucket; a file is visible to whoever can read its record (A-045) |
+| `1800_staging_fixes` | Tax credits with automatic VAT offsets and GRA-approved offsets (D-032); go-live date setting and floors (D-034); reconciliation from the opening month (D-033); arrears notes in the Money panel (D-036) |
 
 ## How it fits together
 
@@ -92,6 +93,7 @@ pg_ctl -D <dir> -o "-p 54329" start
 | `92_test_close_screens.sql` | A-040 |
 | `93_test_reminders.sql` | brief §9, 31, A-042 |
 | `94_test_documents.sql` | A-045 (and 4, 22 for files) |
+| `95_test_staging_fixes.sql` | D-032 to D-036 |
 
 Items 1, 2 and 28 (domain and email, routes, CSV and backups) are tested at the front-end and infrastructure stage. The same acceptance tests are re-run on staging before production.
 

@@ -330,12 +330,18 @@ export function ExpensesPage() {
 // ---------------------------------------------------------------------------
 export function StatutoryPage() {
   const { role } = useAuth()
-  const [tab, setTab] = useState<'ledger' | 'payments' | 'lines'>('ledger')
+  const [params] = useSearchParams()
+  const [tab, setTab] = useState<'ledger' | 'payments' | 'lines' | 'credits'>(params.get('tab') === 'credits' ? 'credits' : 'ledger')
   const ledger = useQuery({ queryKey: ['statutory_ledger'], queryFn: async () =>
     (await supabase.from('statutory_ledger').select('*').order('due_date', { nullsFirst: true })).data ?? [] })
   const payments = useQuery({ queryKey: ['statutory_payments'], queryFn: async () =>
     (await supabase.from('statutory_payments').select('*, line:statutory_lines(type, period_start, payee)').order('created_at', { ascending: false })).data ?? [] })
-  const refresh = useRefresh(['statutory_ledger', 'statutory_payments'])
+  const credits = useQuery({ queryKey: ['tax-credit-balances'], queryFn: async () =>
+    (await supabase.from('tax_credit_balances').select('*').order('as_at')).data ?? [] })
+  const applications = useQuery({ queryKey: ['tax-credit-applications'], queryFn: async () =>
+    (await supabase.from('tax_credit_applications').select('*, line:statutory_lines(type, period_start, is_opening_arrears)').order('created_at', { ascending: false })).data ?? [] })
+  const refresh = useRefresh(['statutory_ledger', 'statutory_payments', 'tax-credit-balances', 'tax-credit-applications'])
+  const [applying, setApplying] = useState<{ id: string; label: string; outstanding: number } | null>(null)
   const [preparing, setPreparing] = useState<{ id: string; label: string; outstanding: number } | null>(null)
   const canPrepare = role === 'accountant' || role === 'owner'
   const arrears = new Map<string, number>()
@@ -349,16 +355,20 @@ export function StatutoryPage() {
       {arrears.size > 0 && <p className="form-error">Overdue: {[...arrears.entries()].map(([k, v]) => `${k} ${formatMoney(v)}`).join(' · ')}</p>}
       <Tabs value={tab} onChange={setTab} tabs={[{ key: 'ledger', label: 'Obligations' },
         { key: 'payments', label: 'Payments', count: (payments.data ?? []).filter((p) => p.status === 'prepared' || p.status === 'approved').length },
+        { key: 'credits', label: 'Credits', count: (credits.data ?? []).filter((c) => Number(c.remaining) > 0.005).length },
         { key: 'lines', label: 'Lines (add / import)' }]} />
       {tab === 'ledger' && table(<>
-        <thead><tr><th>Obligation</th><th>Period</th><th>Payee</th><th>Due</th><th className="num">Due amount</th><th className="num">Paid</th><th className="num">Outstanding</th><th>Status</th><th /></tr></thead>
+        <thead><tr><th>Obligation</th><th>Period</th><th>Payee</th><th>Due</th><th className="num">Due amount</th><th className="num">Paid</th><th className="num">Credit</th><th className="num">Outstanding</th><th>Status</th><th /></tr></thead>
         <tbody>{(ledger.data ?? []).map((l) => (
           <tr key={l.id!} className={l.status === 'overdue' ? 'row-bad' : undefined}>
-            <td>{l.label}{l.is_opening_arrears && <div className="muted small">opening arrears</div>}</td>
+            <td>{l.label}{l.is_opening_arrears && <div className="muted small">opening arrears</div>}
+              {l.notes && <div className="small warn-text">{l.notes}</div>}</td>
             <td>{l.period_start ? formatDate(l.period_start).slice(-8) : '—'}</td><td>{l.payee ?? <span className="warn-text">set payee</span>}</td>
-            <td>{formatDate(l.due_date)}</td><td><Money value={l.amount_due} /></td><td><Money value={l.amount_paid} /></td><td><Money value={l.outstanding} /></td>
+            <td>{formatDate(l.due_date)}</td><td><Money value={l.amount_due} /></td><td><Money value={l.amount_paid} /></td><td>{Number(l.credit_applied) > 0 ? <Money value={l.credit_applied} /> : ''}</td><td><Money value={l.outstanding} /></td>
             <td><StatusBadge status={l.status} /></td>
-            <td>{canPrepare && Number(l.outstanding) > 0 && <button onClick={() => setPreparing({ id: l.id!, label: l.label!, outstanding: Number(l.outstanding) })}>Prepare payment</button>}</td>
+            <td className="row-actions">{canPrepare && Number(l.outstanding) > 0 && <button onClick={() => setPreparing({ id: l.id!, label: l.label!, outstanding: Number(l.outstanding) })}>Prepare payment</button>}
+              {canPrepare && Number(l.outstanding) > 0 && /^gra$/i.test(l.payee ?? '') && (credits.data ?? []).some((c) => Number(c.remaining) > 0.005 && /^gra$/i.test(c.authority ?? '')) &&
+                <button onClick={() => setApplying({ id: l.id!, label: `${l.label}${l.period_start ? ` ${formatDate(l.period_start).slice(-8)}` : ' (arrears)'}`, outstanding: Number(l.outstanding) })}>Apply credit</button>}</td>
           </tr>
         ))}</tbody>
       </>)}
@@ -371,6 +381,37 @@ export function StatutoryPage() {
         ))}</tbody>
       </>)}
       {tab === 'lines' && <ResourceList resource={statutoryLines} />}
+      {tab === 'credits' && <>
+        <p className="muted small">What GRA (or another authority) owes MeLiNS (D-032). A credit set to offset VAT returns is used on each later VAT line automatically, oldest first.
+          To set one against another GRA liability, such as PAYE arrears, use "Apply credit" on that line once GRA has approved the offset.</p>
+        {table(<>
+          <thead><tr><th>Credit</th><th>As at</th><th>Offsets</th><th className="num">Amount</th><th className="num">Used</th><th className="num">Left</th></tr></thead>
+          <tbody>{(credits.data ?? []).map((c) => (
+            <tr key={c.id!}><td>{c.authority}: {c.description}{c.notes && <div className="muted small">{c.notes}</div>}</td><td>{formatDate(c.as_at)}</td>
+              <td>{c.auto_offset_type ? `${c.auto_offset_type.replace(/_/g, ' ').toUpperCase()} returns, automatically` : 'by hand, with GRA approval'}</td>
+              <td><Money value={c.amount} /></td><td><Money value={c.applied} /></td><td><Money value={c.remaining} strong /></td></tr>
+          ))}
+          {(credits.data ?? []).length === 0 && <tr><td colSpan={6} className="muted">No credits. Add them in Settings › Setup, step 4.</td></tr>}</tbody>
+        </>)}
+        {(applications.data ?? []).length > 0 && <>
+          <h2>Where credit has been used</h2>
+          {table(<>
+            <thead><tr><th>Date</th><th>Against</th><th>How</th><th className="num">Amount</th><th /></tr></thead>
+            <tbody>{(applications.data ?? []).map((a) => (
+              <tr key={a.id}><td>{formatDate(a.applied_on)}</td>
+                <td>{a.line?.type.replace(/_/g, ' ')} {a.line?.is_opening_arrears ? 'arrears' : a.line?.period_start && formatDate(a.line.period_start).slice(-8)}</td>
+                <td>{a.kind === 'auto' ? 'automatic offset' : <>GRA-approved offset, ref {a.gra_reference}{a.notes && <span className="muted small"> · {a.notes}</span>}</>}</td>
+                <td><Money value={a.amount} /></td>
+                <td>{role === 'owner' && a.kind === 'gra_offset' && <button className="link" onClick={async () => {
+                  if (!confirm('Undo this offset? The credit goes back to the balance.')) return
+                  await supabase.from('tax_credit_applications').delete().eq('id', a.id); await refresh()
+                }}>Undo</button>}</td></tr>
+            ))}</tbody>
+          </>)}
+        </>}
+      </>}
+      {applying && <ApplyCreditDialog line={applying} credits={(credits.data ?? []).filter((c) => Number(c.remaining) > 0.005 && /^gra$/i.test(c.authority ?? ''))}
+        onClose={() => setApplying(null)} onDone={async () => { setApplying(null); await refresh() }} />}
       {preparing && (
         <PromptDialog title={`Prepare payment: ${preparing.label}`} label={`Amount (outstanding ${formatMoney(preparing.outstanding)})`} confirmLabel="Prepare for approval"
           onClose={() => setPreparing(null)}
@@ -383,6 +424,40 @@ export function StatutoryPage() {
           }} />
       )}
     </section>
+  )
+}
+
+function ApplyCreditDialog({ line, credits, onClose, onDone }: {
+  line: { id: string; label: string; outstanding: number }
+  credits: { id: string | null; description: string | null; remaining: number | null }[]
+  onClose: () => void
+  onDone: () => Promise<void>
+}) {
+  const [credit, setCredit] = useState(credits[0]?.id ?? '')
+  const chosen = credits.find((c) => c.id === credit)
+  const [amount, setAmount] = useState(String(Math.min(line.outstanding, Number(chosen?.remaining ?? 0))))
+  const [ref, setRef] = useState('')
+  const [notes, setNotes] = useState('')
+  const action = useAction()
+  return (
+    <Dialog title={`Apply a credit to ${line.label}`} onClose={onClose}>
+      <form className="stack" onSubmit={(e) => { e.preventDefault(); action.run(async () => {
+        const n = parseMoney(amount)
+        if (!n || n <= 0) return 'Enter the amount'
+        const { error } = await supabase.rpc('apply_tax_credit', { p_credit: credit, p_line: line.id, p_amount: n, p_gra_reference: ref, p_notes: notes || undefined })
+        if (error) return friendlyError(error)
+        await onDone()
+      }) }}>
+        <p className="muted small">Only once GRA has approved setting the credit against this liability (D-032). It's recorded with GRA's reference and in the audit log.</p>
+        <label>Credit<select value={credit} onChange={(e) => setCredit(e.target.value)}>
+          {credits.map((c) => <option key={c.id!} value={c.id!}>{c.description} ({formatMoney(c.remaining)} left)</option>)}</select></label>
+        <label>Amount (this line still owes {formatMoney(line.outstanding)})<input inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} required /></label>
+        <label>GRA's reference for the approval<input value={ref} onChange={(e) => setRef(e.target.value)} required /></label>
+        <label>Note<input value={notes} onChange={(e) => setNotes(e.target.value)} /></label>
+        {action.error && <p className="form-error">{action.error}</p>}
+        <div className="form-actions"><button className="primary" disabled={action.busy}>Apply credit</button><button type="button" onClick={onClose}>Cancel</button></div>
+      </form>
+    </Dialog>
   )
 }
 

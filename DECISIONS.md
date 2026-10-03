@@ -13,10 +13,10 @@ Every decision, assumption and change made during the build goes here. Read this
 
 | Item | State |
 |---|---|
-| Current phase | **Phase A: screens** (2 Oct 2026). Migrations through 1600 are applied to staging (checked 2 Oct 2026, with all three Edge Functions deployed and both reminder schedules active). **1700 (documents) is waiting to be pushed.** Built: every Phase A route (no placeholders left), Settings with the setup wizard, document uploads, reminders and email sender, and the weekly backup. **Next:** the NSP import (D-030, waiting for the sheet layout), then the Phase A acceptance run on staging and the production deploy. |
+| Current phase | **Phase A: screens** (2 Oct 2026). Migrations through 1600 are applied to staging (checked 2 Oct 2026, with all three Edge Functions deployed and both reminder schedules active). **1700 (documents) and 1800 (fixes from the Owner's staging test, D-032 to D-036) are waiting to be pushed.** Built: every Phase A route (no placeholders left), Settings with the setup wizard, document uploads, reminders and email sender, and the weekly backup. **Next:** the NSP import (D-030, waiting for the sheet layout), then the Phase A acceptance run on staging and the production deploy. |
 | Brief | PROJECT_BRIEF.md = `MeLiNS_Command_Centre_Build_Prompt_v2.txt`, revision 2.4 (28 Sep 2026), copied unchanged |
 | Repository | https://github.com/akdadzie/melins-command-centre (private); local folder `C:\dev\melins-ims` |
-| Waiting on Owner | Push migration 1700 (`docs/SETUP_INFRA.md` §9); set up the weekly backup (`docs/BACKUP_RESTORE.md`); work through the setup wizard on staging; add a backup authenticator (`docs/ACCESS_RECOVERY.md`); SMTP/DNS setup, then the email schedule (§10); the NSP sheet layout (D-030); the December bonus layout before November (D-031); statement samples; user email list; leave defaults (A-038) |
+| Waiting on Owner | Push migrations 1700 and 1800 (`docs/SETUP_INFRA.md` §9), then enter the VAT credit (GHS 9,482.80) and the arrears notes in Settings › Setup, step 4; set up the weekly backup (`docs/BACKUP_RESTORE.md`); work through the setup wizard on staging; add a backup authenticator (`docs/ACCESS_RECOVERY.md`); SMTP/DNS setup, then the email schedule (§10); the NSP sheet layout (D-030); the December bonus layout before November (D-031); statement samples; user email list; leave defaults (A-038) |
 
 ---
 
@@ -133,6 +133,26 @@ It is modelled as Tier 3 (employee and employer), with a dated rate setting defa
 **D-030 (Q-26): The NSP import is built last in Phase A.** The Owner will send the NSP sheet's layout (figures blanked). Until then the NSP sheet uses the staff sheet's column map.
 
 **D-031 (Q-24): December bonus columns stay open.** The Owner will supply the December bonus layout before November. Nothing waits on it in Phase A.
+
+### Owner's staging test, 3 Oct 2026 (D-032 to D-036)
+
+**D-032: Opening VAT credit.** GRA owes MeLiNS **GHS 9,482.80** of VAT overpaid as at 30 Sep 2026.
+- **Recording it.** It's entered as a tax credit, in step 4 of the setup wizard ("Statutory arrears and credits") or on the Tax and statutory page.
+- **Where it shows.** The Money panel's tax section shows it as owed to MeLiNS until it's used. It is not counted as cash.
+- **Automatic offset.** A credit set to offset VAT returns is applied automatically to each VAT line for a period after its date, oldest credit first. It never covers more than a line still owes after cash paid. If a return's figure changes, the offsets on that line and every later VAT line are worked out again, so freed credit flows on to the next return.
+- **Other GRA liabilities.** A credit can also be set against another liability payable to GRA, such as PAYE arrears, by the Owner or the Accountant, once GRA has approved the offset. GRA's reference is required. The offset is audited, and the Owner is told when the Accountant records one; the Owner can undo it.
+- **In the ledger.** Credit applied counts towards a statutory line like a payment ("Credit" column), but no cash moves. A line covered by credit isn't chased by reminders.
+- Built in migration 1800.
+
+**D-033: Reconciliation from each account's opening month.** An account is only asked for a month's reconciliation if it was open by the end of that month. The Money panel, the Accountant's home and the month-close blockers now all apply this. Accounts opened on 1 Oct 2026 are first reconciled for October.
+
+**D-034: Nothing before go-live counts.** Missing timesheet days, timesheet compliance, utilisation (its first column is the go-live month), and timesheet reminders all start at the go-live date.
+- The date is now held in the database (`app.system_config`, 1 Oct 2026) rather than written into the code, and the screens use the same date.
+- The automated tests run with an earlier go-live, because they use dates around "today".
+
+**D-035: Weeks of cover with no running cost.** While the monthly running cost is 0 (no payroll run or recurring expenses yet), the tile says "Not yet" with the hint "Add a payroll run or recurring expenses to calculate", and links to Payroll.
+
+**D-036: Notes on opening arrears.** Each opening arrears line has a note (e.g. SSNIT Tier 2 GHS 45,000: "estimate, awaiting trustee statement"). It's shown next to the figure in the setup wizard, on the Tax and statutory page and in the Money panel's arrears.
 
 ---
 

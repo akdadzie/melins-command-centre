@@ -5294,6 +5294,111 @@ export type Database = {
         }
         Relationships: []
       }
+      tax_credit_applications: {
+        Row: {
+          amount: number
+          applied_on: string
+          created_at: string
+          created_by: string | null
+          credit_id: string
+          gra_reference: string | null
+          id: string
+          kind: string
+          notes: string | null
+          statutory_line_id: string
+        }
+        Insert: {
+          amount: number
+          applied_on?: string
+          created_at?: string
+          created_by?: string | null
+          credit_id: string
+          gra_reference?: string | null
+          id?: string
+          kind: string
+          notes?: string | null
+          statutory_line_id: string
+        }
+        Update: {
+          amount?: number
+          applied_on?: string
+          created_at?: string
+          created_by?: string | null
+          credit_id?: string
+          gra_reference?: string | null
+          id?: string
+          kind?: string
+          notes?: string | null
+          statutory_line_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tax_credit_applications_credit_id_fkey"
+            columns: ["credit_id"]
+            isOneToOne: false
+            referencedRelation: "tax_credits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tax_credit_applications_statutory_line_id_fkey"
+            columns: ["statutory_line_id"]
+            isOneToOne: false
+            referencedRelation: "statutory_lines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tax_credits: {
+        Row: {
+          amount: number
+          as_at: string
+          attachment_path: string | null
+          authority: string
+          auto_offset_type: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          description: string
+          id: string
+          notes: string | null
+          reference: string | null
+          tax_type: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          as_at: string
+          attachment_path?: string | null
+          authority?: string
+          auto_offset_type?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          description: string
+          id?: string
+          notes?: string | null
+          reference?: string | null
+          tax_type?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          as_at?: string
+          attachment_path?: string | null
+          authority?: string
+          auto_offset_type?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          notes?: string | null
+          reference?: string | null
+          tax_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       timesheet_entries: {
         Row: {
           approved_at: string | null
@@ -6160,6 +6265,7 @@ export type Database = {
         Row: {
           amount_due: number | null
           amount_paid: number | null
+          credit_applied: number | null
           due_date: string | null
           id: string | null
           is_opening_arrears: boolean | null
@@ -6202,6 +6308,22 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      tax_credit_balances: {
+        Row: {
+          amount: number | null
+          applied: number | null
+          as_at: string | null
+          authority: string | null
+          auto_offset_type: string | null
+          description: string | null
+          id: string | null
+          notes: string | null
+          reference: string | null
+          remaining: number | null
+          tax_type: string | null
+        }
+        Relationships: []
       }
       timesheet_charge_out: {
         Row: {
@@ -6251,6 +6373,16 @@ export type Database = {
       }
     }
     Functions: {
+      apply_tax_credit: {
+        Args: {
+          p_amount: number
+          p_credit: string
+          p_gra_reference: string
+          p_line: string
+          p_notes?: string
+        }
+        Returns: string
+      }
       accountant_queue: { Args: never; Returns: Json }
       apply_payroll_cost_changes: {
         Args: { p_run: string; p_staff: string[] }

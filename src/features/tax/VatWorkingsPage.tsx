@@ -46,6 +46,10 @@ export function VatWorkingsPage() {
       .select('id, expense_date, description, net_amount, supplier:suppliers(name, ident:supplier_identifiers(tin)), taxes:expense_taxes(amount, is_vat, recoverable)')
       .eq('entry_status', 'confirmed').eq('has_valid_vat_invoice', true).gte('expense_date', s).lt('expense_date', e).order('expense_date')).data ?? [],
   })
+  const vatCredits = useQuery({
+    queryKey: ['tax-credit-balances'], enabled: valid,
+    queryFn: async () => (await supabase.from('tax_credit_balances').select('*').eq('auto_offset_type', 'vat')).data ?? [],
+  })
   const withheld = useQuery({
     queryKey: ['vat-withheld', s], enabled: valid,
     queryFn: async () => (await supabase.from('receipts').select('id, receipt_date, vat_withheld_amount, reference, client:clients(name)')
@@ -93,6 +97,10 @@ export function VatWorkingsPage() {
       <div className="stats">
         <div className="stat"><span className="label">VAT {net >= 0 ? 'payable' : 'refundable'}</span><strong className={net > 0 ? 'warn' : 'ok'}><Money value={Math.abs(net)} /></strong>
           <span className="muted small">output − credit notes − claimable input − withheld by clients</span></div>
+        {(vatCredits.data ?? []).filter((c) => Number(c.remaining) > 0.005).map((c) => (
+          <div key={c.id} className="stat"><span className="label">VAT credit held by {c.authority}</span><strong className="ok"><Money value={c.remaining} /></strong>
+            <span className="muted small">{c.description}: offset against each VAT return on the statutory ledger as it's entered (D-032)</span></div>
+        ))}
         {levies.map((l) => <div key={l.component} className="stat"><span className="label">{l.component} payable</span><strong><Money value={l.net_payable} /></strong></div>)}
       </div>
 

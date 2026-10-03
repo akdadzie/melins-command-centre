@@ -81,3 +81,8 @@ language sql stable as $$
 $$;
 
 grant execute on all functions in schema tests to anon, authenticated;
+
+-- The acceptance tests use dates around "today", some before the real
+-- go-live (1 Oct 2026), so they run with an earlier go-live. 95_test_* checks
+-- the go-live floor itself.
+update app.system_config set go_live_date = '2025-01-01';

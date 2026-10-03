@@ -353,6 +353,9 @@ const openingArrears: ResourceDef = {
   ...R.statutoryLines, key: 'opening_arrears', title: 'Opening statutory arrears', singular: 'Opening arrears line',
   description: 'What was owed at 30 Sep 2026, one line per type (about GHS 52,500 over six months, brief §11). Each shows as overdue until paid.',
   listFilter: { is_opening_arrears: true }, createDefaults: { is_opening_arrears: true },
+  // The note shows next to the figure everywhere, e.g. "estimate, awaiting trustee statement" (D-036).
+  fields: R.statutoryLines.fields.map((f) => (f.name === 'notes'
+    ? { ...f, label: 'Note', list: true, help: 'Shown next to the figure, e.g. "estimate, awaiting trustee statement".' } : f)),
 }
 
 export function useSetupStatus() {
@@ -362,13 +365,14 @@ export function useSetupStatus() {
     enabled: role === 'owner',
     queryFn: async () => {
       const today = todayAccra()
-      const [settings, accounts, codes, arrears, wht, users] = await Promise.all([
+      const [settings, accounts, codes, arrears, wht, users, credits] = await Promise.all([
         supabase.from('settings_versions').select('*').lte('effective_from', today).order('effective_from', { ascending: false }).limit(1).maybeSingle(),
         supabase.from('accounts').select('id, name, opening_balance, opening_date'),
         supabase.from('tax_codes').select('id, is_active, versions:tax_code_versions(effective_from, confirmed_at)'),
         supabase.from('statutory_lines').select('id, amount_due').eq('is_opening_arrears', true),
         supabase.from('wht_rates').select('id'),
         supabase.from('user_directory').select('user_id, role'),
+        supabase.from('tax_credits').select('amount'),
       ])
       const s = settings.data
       const activeCodes = (codes.data ?? []).filter((c) => c.is_active)
@@ -380,6 +384,8 @@ export function useSetupStatus() {
         taxConfirmed: activeCodes.every((c) => (c.versions ?? []).some((v) => v.confirmed_at)),
         arrears: (arrears.data ?? []).length > 0,
         arrearsTotal: (arrears.data ?? []).reduce((a, l) => a + Number(l.amount_due), 0),
+        credits: (credits.data ?? []).length > 0,
+        creditsTotal: (credits.data ?? []).reduce((a, c) => a + Number(c.amount), 0),
         wht: (wht.data ?? []).length > 0,
         bonus: !!(s?.bonus_base && s.bonus_eligibility),
         users: (users.data ?? []).length > 1,
@@ -402,8 +408,9 @@ export function SetupWizard() {
       body: () => <p><Link to="/accounts">Open Accounts</Link> and add each one.</p> },
     { key: 'tax', title: '3. Tax codes and rates', done: s.taxCodes, note: s.taxCodes && !s.taxConfirmed ? 'Rates entered; waiting for the Accountant to confirm them.' : 'VAT and each levy, with their order and basis. The Accountant confirms them.',
       body: () => <TaxCodesPanel /> },
-    { key: 'arrears', title: '4. Statutory arrears by type', done: s.arrears, note: s.arrears ? `${formatMoney(s.arrearsTotal)} entered.` : 'PAYE, SSNIT Tier 1, SSNIT Tier 2 and any others owed at 30 Sep 2026.',
-      body: () => <ResourceList resource={openingArrears} /> },
+    { key: 'arrears', title: '4. Statutory arrears and credits', done: s.arrears,
+      note: `${s.arrears ? `${formatMoney(s.arrearsTotal)} of arrears entered.` : 'PAYE, SSNIT Tier 1, SSNIT Tier 2 and any others owed at 30 Sep 2026.'} ${s.credits ? `${formatMoney(s.creditsTotal)} owed to MeLiNS entered.` : 'Also what GRA owes MeLiNS (VAT overpaid: GHS 9,482.80, D-032).'}`,
+      body: () => <><ResourceList resource={openingArrears} /><ResourceList resource={R.taxCredits} /></> },
     { key: 'wht', title: '5. WHT rates', done: s.wht, note: 'Rates MeLiNS deducts from suppliers and on directors\' fees and dividends, and client WHT categories. Per diem rates come with trips in Phase B.',
       body: () => <ResourceList resource={R.whtRates} /> },
     { key: 'bonus', title: '6. Bonus rule and leave', done: s.bonus, note: '13th-month bonus base and who qualifies; leave carry-over. Leave types\' default days are under Reference data › Leave types.',

@@ -351,6 +351,27 @@ export const directorTransactions: ResourceDef = {
   ],
 }
 
+export const taxCredits: ResourceDef = {
+  key: 'tax_credits', table: 'tax_credits', title: 'Tax credits', singular: 'Tax credit',
+  description: 'Money a tax authority owes MeLiNS, e.g. VAT overpaid (D-032). A VAT credit set to offset VAT returns is used on each later return automatically; it can also be set against another GRA liability once GRA approves the offset.',
+  orderBy: { column: 'as_at' },
+  readRoles: [O, D, AC], createRoles: [O, AC], editRoles: [O, AC], importRoles: [O, AC],
+  fields: [
+    { name: 'authority', label: 'Owed by', type: 'text', required: true, default: 'GRA', list: true },
+    { name: 'tax_type', label: 'Tax', type: 'select', required: true, default: 'vat', list: true,
+      options: opts([['vat', 'VAT'], ['paye', 'PAYE'], ['wht', 'WHT'], ['corporate_tax', 'Corporate tax'], ['other', 'Other']]) },
+    { name: 'description', label: 'Description', type: 'text', required: true, list: true, help: 'e.g. "VAT overpaid as at 30 Sep 2026"' },
+    { name: 'amount', label: 'Amount', type: 'money', required: true, min: 0.01, list: true },
+    { name: 'as_at', label: 'As at', type: 'date', required: true, list: true },
+    { name: 'auto_offset_type', label: 'Offset automatically against', type: 'select', list: true,
+      options: opts([['vat', 'VAT returns'], ['paye', 'PAYE'], ['wht_remittance', 'WHT remittance']]),
+      help: 'Blank = only applied by hand, with GRA\'s approval.' },
+    { name: 'reference', label: 'Reference', type: 'text', help: 'e.g. the VAT return or GRA letter it comes from' },
+    { name: 'notes', label: 'Notes', type: 'text' },
+    { name: 'attachment_path', label: 'Supporting document', type: 'file', csv: false },
+  ],
+}
+
 export const leaveEntitlements: ResourceDef = {
   key: 'leave_entitlements', table: 'leave_entitlements', title: 'Leave entitlements', singular: 'Entitlement',
   orderBy: { column: 'leave_year', ascending: false },
@@ -473,7 +494,7 @@ export const whtCertificates: ResourceDef = {
 
 export const RESOURCES: ResourceDef[] = [
   clients, referrers, suppliers, jobs, billingMilestones, jobHourBudgets, jobContracts,
-  openingInvoices, whtCertificates, expenses, recurringExpenses, transfers, accounts, statutoryLines, directorTransactions,
+  openingInvoices, whtCertificates, taxCredits, expenses, recurringExpenses, transfers, accounts, statutoryLines, directorTransactions,
   staffLoans, staff, staffCostHistory, leaveEntitlements, leaveTypes, publicHolidays, whtRates,
   expenseCategories, jobTypes,
 ]

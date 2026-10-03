@@ -6,6 +6,7 @@ import { Link } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '../../auth/AuthProvider'
 import { formatDate, todayAccra } from '../../lib/format'
+import { GO_LIVE_MONTH } from '../../lib/golive'
 import { supabase } from '../../lib/supabase'
 
 const addDays = (iso: string, n: number) => { const d = new Date(`${iso}T00:00:00Z`); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10) }
@@ -84,7 +85,7 @@ export function TeamPage() {
                 const holiday = holidays.data?.get(d)
                 const leave = c.some((e) => e.category === 'leave')
                 const hours = c.reduce((s, e) => s + Number(e.hours), 0)
-                const gap = !c.length && !weekend && !holiday && d < today && d >= p.start_date && (!p.end_date || d <= p.end_date)
+                const gap = !c.length && !weekend && !holiday && d < today && d >= p.start_date && d >= GO_LIVE_MONTH && (!p.end_date || d <= p.end_date)
                 return (
                   <td key={d} className={`num ${gap ? 'row-bad' : ''}`} title={holiday ?? undefined}>
                     {leave ? <span className="muted">leave</span> : holiday ? <span className="muted">hol.</span>
