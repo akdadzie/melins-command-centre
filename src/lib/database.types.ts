@@ -316,7 +316,9 @@ export type Database = {
       }
       clients: {
         Row: {
+          address: string | null
           company_id: string
+          contact_person: string | null
           created_at: string
           created_by: string | null
           deducts_wht: boolean
@@ -336,7 +338,9 @@ export type Database = {
           wht_category: string | null
         }
         Insert: {
+          address?: string | null
           company_id?: string
+          contact_person?: string | null
           created_at?: string
           created_by?: string | null
           deducts_wht?: boolean
@@ -356,7 +360,9 @@ export type Database = {
           wht_category?: string | null
         }
         Update: {
+          address?: string | null
           company_id?: string
+          contact_person?: string | null
           created_at?: string
           created_by?: string | null
           deducts_wht?: boolean
@@ -3878,6 +3884,9 @@ export type Database = {
           bonus_payment_month: number
           bonus_prorated: boolean
           client_wht_base: string
+          company_email: string | null
+          company_phone: string | null
+          company_website: string | null
           created_at: string
           created_by: string | null
           default_billable_hours: number
@@ -3895,6 +3904,14 @@ export type Database = {
           monthly_fee_target: number
           notes: string | null
           overhead_share: number
+          payment_bank_account_name: string | null
+          payment_bank_account_number: string | null
+          payment_bank_branch: string | null
+          payment_bank_name: string | null
+          payment_momo_account_name: string | null
+          payment_momo_network: string | null
+          payment_momo_note: string | null
+          payment_momo_number: string | null
           payroll_line_tolerance: number
           payroll_total_tolerance: number
           pf_employee_rate: number
@@ -3923,6 +3940,9 @@ export type Database = {
           bonus_payment_month?: number
           bonus_prorated?: boolean
           client_wht_base?: string
+          company_email?: string | null
+          company_phone?: string | null
+          company_website?: string | null
           created_at?: string
           created_by?: string | null
           default_billable_hours?: number
@@ -3940,6 +3960,14 @@ export type Database = {
           monthly_fee_target?: number
           notes?: string | null
           overhead_share?: number
+          payment_bank_account_name?: string | null
+          payment_bank_account_number?: string | null
+          payment_bank_branch?: string | null
+          payment_bank_name?: string | null
+          payment_momo_account_name?: string | null
+          payment_momo_network?: string | null
+          payment_momo_note?: string | null
+          payment_momo_number?: string | null
           payroll_line_tolerance?: number
           payroll_total_tolerance?: number
           pf_employee_rate?: number
@@ -3968,6 +3996,9 @@ export type Database = {
           bonus_payment_month?: number
           bonus_prorated?: boolean
           client_wht_base?: string
+          company_email?: string | null
+          company_phone?: string | null
+          company_website?: string | null
           created_at?: string
           created_by?: string | null
           default_billable_hours?: number
@@ -3985,6 +4016,14 @@ export type Database = {
           monthly_fee_target?: number
           notes?: string | null
           overhead_share?: number
+          payment_bank_account_name?: string | null
+          payment_bank_account_number?: string | null
+          payment_bank_branch?: string | null
+          payment_bank_name?: string | null
+          payment_momo_account_name?: string | null
+          payment_momo_network?: string | null
+          payment_momo_note?: string | null
+          payment_momo_number?: string | null
           payroll_line_tolerance?: number
           payroll_total_tolerance?: number
           pf_employee_rate?: number
@@ -4851,6 +4890,7 @@ export type Database = {
           payee: string | null
           period_end: string | null
           period_start: string | null
+          planned_payment_date: string | null
           source_id: string | null
           source_type: string | null
           type: string
@@ -4869,6 +4909,7 @@ export type Database = {
           payee?: string | null
           period_end?: string | null
           period_start?: string | null
+          planned_payment_date?: string | null
           source_id?: string | null
           source_type?: string | null
           type: string
@@ -4887,6 +4928,7 @@ export type Database = {
           payee?: string | null
           period_end?: string | null
           period_start?: string | null
+          planned_payment_date?: string | null
           source_id?: string | null
           source_type?: string | null
           type?: string
@@ -5097,6 +5139,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      statutory_plan_instalments: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          due_on: string
+          id: string
+          notes: string | null
+          statutory_line_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          due_on: string
+          id?: string
+          notes?: string | null
+          statutory_line_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          due_on?: string
+          id?: string
+          notes?: string | null
+          statutory_line_id?: string
+        }
+        Relationships: []
       }
       supplier_identifiers: {
         Row: {
@@ -5921,9 +5993,20 @@ export type Database = {
         Row: {
           accounts_email: string | null
           address: string | null
+          company_email: string | null
+          company_phone: string | null
+          company_website: string | null
           effective_from: string | null
           invoice_payment_details: string | null
           invoice_terms_days: number | null
+          payment_bank_account_name: string | null
+          payment_bank_account_number: string | null
+          payment_bank_branch: string | null
+          payment_bank_name: string | null
+          payment_momo_account_name: string | null
+          payment_momo_network: string | null
+          payment_momo_note: string | null
+          payment_momo_number: string | null
           registered_name: string | null
           tin: string | null
           vat_number: string | null
@@ -6288,6 +6371,18 @@ export type Database = {
             referencedColumns: ["type"]
           },
         ]
+      }
+      statutory_plans: {
+        Row: {
+          first_missed_on: string | null
+          instalments: number | null
+          missed_count: number | null
+          next_amount: number | null
+          next_due_on: string | null
+          planned_payment_date: string | null
+          statutory_line_id: string | null
+        }
+        Relationships: []
       }
       supplier_bills_open: {
         Row: {

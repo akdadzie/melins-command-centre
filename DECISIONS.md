@@ -13,10 +13,10 @@ Every decision, assumption and change made during the build goes here. Read this
 
 | Item | State |
 |---|---|
-| Current phase | **Phase A: screens** (2 Oct 2026). Migrations through 1600 are applied to staging (checked 2 Oct 2026, with all three Edge Functions deployed and both reminder schedules active). **1700 (documents) and 1800 (fixes from the Owner's staging test, D-032 to D-036) are waiting to be pushed.** Built: every Phase A route (no placeholders left), Settings with the setup wizard, document uploads, reminders and email sender, and the weekly backup. **Next:** the NSP import (D-030, waiting for the sheet layout), then the Phase A acceptance run on staging and the production deploy. |
+| Current phase | **Phase A: screens** (2 Oct 2026). Migrations through 1600 are applied to staging (checked 2 Oct 2026, with all three Edge Functions deployed and both reminder schedules active). **1700 (documents), 1800 (D-032 to D-036) and 1900 (D-037 to D-041) are waiting to be pushed.** Built: every Phase A route (no placeholders left), Settings with the setup wizard, document uploads, reminders and email sender, and the weekly backup. **Next:** the NSP import (D-030, waiting for the sheet layout), then the Phase A acceptance run on staging and the production deploy. |
 | Brief | PROJECT_BRIEF.md = `MeLiNS_Command_Centre_Build_Prompt_v2.txt`, revision 2.4 (28 Sep 2026), copied unchanged |
 | Repository | https://github.com/akdadzie/melins-command-centre (private); local folder `C:\dev\melins-ims` |
-| Waiting on Owner | Push migrations 1700 and 1800 (`docs/SETUP_INFRA.md` §9), then enter the VAT credit (GHS 9,482.80) and the arrears notes in Settings › Setup, step 4; set up the weekly backup (`docs/BACKUP_RESTORE.md`); work through the setup wizard on staging; add a backup authenticator (`docs/ACCESS_RECOVERY.md`); SMTP/DNS setup, then the email schedule (§10); the NSP sheet layout (D-030); the December bonus layout before November (D-031); statement samples; user email list; leave defaults (A-038) |
+| Waiting on Owner | Push migrations 1700 and 1800 (`docs/SETUP_INFRA.md` §9), then enter the VAT credit (GHS 9,482.80) and the arrears notes in Settings › Setup, step 4, and the MoMo number and company phone in Settings › Company and rules (D-039); set up the weekly backup (`docs/BACKUP_RESTORE.md`); work through the setup wizard on staging; add a backup authenticator (`docs/ACCESS_RECOVERY.md`); SMTP/DNS setup, then the email schedule (§10); the NSP sheet layout (D-030); the December bonus layout before November (D-031); statement samples; user email list; leave defaults (A-038) |
 
 ---
 
@@ -153,6 +153,38 @@ It is modelled as Tier 3 (employee and employer), with a dated rate setting defa
 **D-035: Weeks of cover with no running cost.** While the monthly running cost is 0 (no payroll run or recurring expenses yet), the tile says "Not yet" with the hint "Add a payroll run or recurring expenses to calculate", and links to Payroll.
 
 **D-036: Notes on opening arrears.** Each opening arrears line has a note (e.g. SSNIT Tier 2 GHS 45,000: "estimate, awaiting trustee statement"). It's shown next to the figure in the setup wizard, on the Tax and statutory page and in the Money panel's arrears.
+
+### Owner's staging test, 3 Oct 2026, second round (D-037 to D-041)
+
+**D-037: Payment allocation follows the payment.**
+- **The bug.** A payment quick-logged against INV-2026-001 took the invoice's whole outstanding as cash. When its details were corrected to 24,000 cash + 6,000 WHT, the allocation wasn't refitted, giving "−30,000 not allocated".
+- **The rule now.** Allocating to an invoice takes the smaller of what's left of the payment and what the invoice owes, split WHT first, then VAT withheld, then cash. Each part can be edited per invoice.
+- **Payment amounts change.** When a reported payment's amounts change, its allocations are refitted automatically. The quick-log never allocates more than the invoice owes.
+- **Confirming.** Confirm is disabled until every part balances to 0.00. The screen says which part is short or over, and the database refuses an unbalanced confirmation as before.
+- **The staging test payment** is repaired by migration 1900, which refits every reported payment whose allocations exceed it.
+
+**D-038: Missing WHT rate.**
+- If a client deducts WHT but no rate is set for its WHT category, the invoice page, its totals and the print preview warn that the expected WHT shows as 0, with a link to the WHT rates.
+- A draft now looks the rate up again whenever it's saved or approved. Previously it was only looked up when the invoice date changed, so a rate added afterwards was never used.
+
+**D-039: Invoice layout.**
+- **Bill to** takes the left side: client name, organisation, address, "Attn:" contact person, phone, email, TIN and VAT number. Clients gain address and contact-person fields for this.
+- **The invoice facts** (number, date, due date, job) sit in a compact block on the far right.
+- **The header** shows phone, email and website. The repeated tagline under the address is removed; the logo carries it.
+- **Payment options** are separate settings (Settings › Company and rules › How clients pay) and print as labelled lines:
+  - "Bank transfer: Prudential Bank, Taifa Branch, A/C 0392000680010, MeLiNS Associates Limited";
+  - "Mobile money (MTN): number, account name".
+- **Filled in from the Owner's details:** the bank details, MTN, the MoMo account name and note (D-041), and the website (www.themelins.com, from the brief).
+- **Left for the Owner** (never guessed): the MoMo number and the company phone. The print preview flags a missing MoMo number.
+- The full account number on invoices is deliberate. It's what clients pay into, and is separate from MeLiNS's own account records, which keep only the last 4 digits (brief §3).
+
+**D-040: Payment plans for statutory lines.**
+- **Two dates.** Each line keeps its **original due date** (overdue after that) separately from a **planned / agreed payment date**. A plan can instead be split into dated instalments, for example as agreed with GRA or SSNIT.
+- **How a plan is met.** Payments and credit count towards the instalments in date order. A planned date that passes before it's covered is flagged as missed: on the statutory page, and in the Money panel next to the arrears figure with its note.
+- **Reminders:** the Accountant 7 days before each planned payment; the Accountant and the Owner the day after one is missed.
+- **Add credit.** The statutory page's Credits tab has "+ Add credit" (Owner or Accountant).
+
+**D-041: The MoMo account name on invoices** is "MeLiNS Associates Limited", with the note "Some apps may display the name Kwasi Dadzie Ennison (Managing Director) for this wallet." Both are editable in Settings.
 
 ---
 

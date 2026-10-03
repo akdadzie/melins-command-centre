@@ -23,6 +23,8 @@ export const clients: ResourceDef = {
     { name: 'organisation', label: 'Organisation', type: 'text', list: true },
     { name: 'type', label: 'Type', type: 'select', required: true, default: 'corporate', list: true,
       options: opts([['government', 'Government / public'], ['corporate', 'Corporate'], ['private_individual', 'Private individual'], ['other', 'Other']]) },
+    { name: 'contact_person', label: 'Contact person', type: 'text', help: 'Printed as "Attn:" on invoices.' },
+    { name: 'address', label: 'Address', type: 'textarea', help: 'Printed under "Bill to" on invoices.' },
     { name: 'phone', label: 'Phone', type: 'text', list: true },
     { name: 'email', label: 'Email', type: 'email' },
     { name: 'tin', label: 'TIN', type: 'text' },
@@ -326,7 +328,8 @@ export const statutoryLines: ResourceDef = {
     { name: 'period_start', label: 'Period (first day)', type: 'date', list: true, help: 'Required unless it is opening arrears.' },
     { name: 'payee', label: 'Payee', type: 'text', help: 'Blank = the default payee for the type.' },
     { name: 'amount_due', label: 'Amount due', type: 'money', required: true, min: 0, list: true },
-    { name: 'due_date', label: 'Due date', type: 'date', list: true, help: 'Blank = from the statutory calendar.' },
+    { name: 'due_date', label: 'Original due date', type: 'date', list: true, help: 'When it was legally due: overdue after this. Blank = from the statutory calendar.' },
+    { name: 'planned_payment_date', label: 'Planned / agreed payment date', type: 'date', list: true, help: 'When MeLiNS plans, or has agreed, to pay it. Split it into instalments on the statutory page.' },
     { name: 'notes', label: 'Notes', type: 'text' },
   ],
 }

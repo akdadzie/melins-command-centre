@@ -70,7 +70,8 @@ interface MoneyPanelData {
   receivables: { total: number; ageing: Record<string, number>; top_debtors: { name: string; amt: number }[]; reported_unconfirmed: number; retention_held: number }
   statutory: {
     due_next_30_days: { id: string; label: string; due_date: string; outstanding: number }[]
-    arrears: { id: string; label: string; outstanding: number; notes: string | null; credit_applied: number }[]
+    arrears: { id: string; label: string; outstanding: number; notes: string | null; credit_applied: number
+      due_date: string | null; next_planned_on: string | null; next_planned_amount: number | null; plan_missed_on: string | null }[]
     credits: { id: string; authority: string; description: string; amount: number; applied: number; remaining: number; auto_offset_type: string | null }[]
   }
   vat_this_month: number
@@ -157,7 +158,10 @@ function MoneyPanel({ showApprovals }: { showApprovals: boolean }) {
             {m.statutory.arrears.map((a) => (
               <tr key={a.id} className="row-bad"><td><Link to="/tax/statutory">{a.label} arrears</Link>
                 {a.notes && <span className="muted small"> · {a.notes}</span>}
-                {a.credit_applied > 0 && <span className="muted small"> · {formatMoney(a.credit_applied)} offset by credit</span>}</td>
+                {a.credit_applied > 0 && <span className="muted small"> · {formatMoney(a.credit_applied)} offset by credit</span>}
+                {a.plan_missed_on && <span className="bad small"> · planned payment missed {formatDate(a.plan_missed_on)}</span>}
+                {!a.plan_missed_on && a.next_planned_on && <span className="muted small"> · next planned {formatDate(a.next_planned_on)} ({formatMoney(a.next_planned_amount)})</span>}
+                {!a.next_planned_on && !a.plan_missed_on && <span className="muted small"> · no payment plan</span>}</td>
                 <td><Money value={a.outstanding} /></td></tr>
             ))}
             {m.statutory.credits.map((c) => (

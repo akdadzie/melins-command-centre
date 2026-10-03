@@ -21,12 +21,24 @@ export function safeKey(key: string): string {
 export async function getInvoice(key: string) {
   const k = safeKey(key)
   const { data, error } = await supabase.from('invoices')
-    .select('*, job:jobs(id, job_number, title, retention_pct), client:clients(id, name, organisation, tin, vat_number, email, phone)')
+    .select('*, job:jobs(id, job_number, title, retention_pct), client:clients(id, name, organisation, address, contact_person, tin, vat_number, email, phone, deducts_wht, wht_category)')
     .or(`invoice_number.eq.${k},draft_ref.eq.${k}`).maybeSingle()
   if (error) throw error
   return data
 }
 export type Invoice = NonNullable<Awaited<ReturnType<typeof getInvoice>>>
+
+/**
+ * D-038: the client deducts WHT but no rate is set for its category, so the
+ * expected WHT would show as 0 and the expected net receipt as the gross.
+ */
+export function whtRateMissing(invoice: Invoice): string | null {
+  if (!invoice.client?.deducts_wht || Number(invoice.wht_rate) > 0) return null
+  const cat = invoice.client.wht_category ? `"${invoice.client.wht_category}"` : '(no category set on the client)'
+  return invoice.status === 'draft'
+    ? `${invoice.client.name} deducts WHT, but there's no WHT rate for category ${cat} in Settings › WHT rates, so the expected WHT shows as 0. Add the rate: it's applied when this invoice is next saved or approved.`
+    : `${invoice.client.name} deducts WHT, but there was no WHT rate for category ${cat} when this invoice was issued, so its expected WHT is 0. The actual WHT is recorded when the payment arrives.`
+}
 
 export async function getInvoiceLines(invoiceId: string) {
   const { data, error } = await supabase.from('invoice_lines')

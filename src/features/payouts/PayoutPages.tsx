@@ -7,7 +7,8 @@ import { Dialog } from '../../components/Dialog'
 import { Money, PromptDialog, StatusBadge, Tabs, useAction } from '../../components/ui'
 import { formatDate, formatMoney, parseMoney } from '../../lib/format'
 import { db, supabase } from '../../lib/supabase'
-import { expenses as expensesResource, statutoryLines } from '../../resources/definitions'
+import { expenses as expensesResource, statutoryLines, taxCredits } from '../../resources/definitions'
+import { ResourceForm } from '../../resources/ResourceForm'
 import { lookups } from '../../resources/lookups'
 import { ResourceList } from '../../resources/ResourceList'
 import { fetchLookupRows, friendlyError } from '../../resources/useLookups'
@@ -340,8 +341,12 @@ export function StatutoryPage() {
     (await supabase.from('tax_credit_balances').select('*').order('as_at')).data ?? [] })
   const applications = useQuery({ queryKey: ['tax-credit-applications'], queryFn: async () =>
     (await supabase.from('tax_credit_applications').select('*, line:statutory_lines(type, period_start, is_opening_arrears)').order('created_at', { ascending: false })).data ?? [] })
-  const refresh = useRefresh(['statutory_ledger', 'statutory_payments', 'tax-credit-balances', 'tax-credit-applications'])
+  const refresh = useRefresh(['statutory_ledger', 'statutory_payments', 'tax-credit-balances', 'tax-credit-applications', 'statutory-plans'])
   const [applying, setApplying] = useState<{ id: string; label: string; outstanding: number } | null>(null)
+  const [planning, setPlanning] = useState<{ id: string; label: string; outstanding: number; planned: string | null } | null>(null)
+  const [addingCredit, setAddingCredit] = useState(false)
+  const plans = useQuery({ queryKey: ['statutory-plans'], queryFn: async () =>
+    new Map(((await supabase.from('statutory_plans').select('*')).data ?? []).map((p) => [p.statutory_line_id, p])) })
   const [preparing, setPreparing] = useState<{ id: string; label: string; outstanding: number } | null>(null)
   const canPrepare = role === 'accountant' || role === 'owner'
   const arrears = new Map<string, number>()
@@ -358,15 +363,26 @@ export function StatutoryPage() {
         { key: 'credits', label: 'Credits', count: (credits.data ?? []).filter((c) => Number(c.remaining) > 0.005).length },
         { key: 'lines', label: 'Lines (add / import)' }]} />
       {tab === 'ledger' && table(<>
-        <thead><tr><th>Obligation</th><th>Period</th><th>Payee</th><th>Due</th><th className="num">Due amount</th><th className="num">Paid</th><th className="num">Credit</th><th className="num">Outstanding</th><th>Status</th><th /></tr></thead>
+        <thead><tr><th>Obligation</th><th>Period</th><th>Payee</th><th>Due (original)</th><th>Plan</th><th className="num">Due amount</th><th className="num">Paid</th><th className="num">Credit</th><th className="num">Outstanding</th><th>Status</th><th /></tr></thead>
         <tbody>{(ledger.data ?? []).map((l) => (
           <tr key={l.id!} className={l.status === 'overdue' ? 'row-bad' : undefined}>
             <td>{l.label}{l.is_opening_arrears && <div className="muted small">opening arrears</div>}
               {l.notes && <div className="small warn-text">{l.notes}</div>}</td>
             <td>{l.period_start ? formatDate(l.period_start).slice(-8) : '—'}</td><td>{l.payee ?? <span className="warn-text">set payee</span>}</td>
-            <td>{formatDate(l.due_date)}</td><td><Money value={l.amount_due} /></td><td><Money value={l.amount_paid} /></td><td>{Number(l.credit_applied) > 0 ? <Money value={l.credit_applied} /> : ''}</td><td><Money value={l.outstanding} /></td>
+            <td>{formatDate(l.due_date)}</td>
+            <td>{(() => {
+              const pl = plans.data?.get(l.id!)
+              if (!pl) return Number(l.outstanding) > 0 ? <span className="muted small">none</span> : ''
+              return <>
+                {pl.first_missed_on && <div className="bad small">missed {formatDate(pl.first_missed_on)}</div>}
+                {pl.next_due_on ? <div className="small">next {formatDate(pl.next_due_on)}: <Money value={pl.next_amount} /></div> : <div className="ok-text small">plan met</div>}
+                {Number(pl.instalments) > 1 && <div className="muted small">{pl.instalments} instalments</div>}
+              </>
+            })()}</td>
+            <td><Money value={l.amount_due} /></td><td><Money value={l.amount_paid} /></td><td>{Number(l.credit_applied) > 0 ? <Money value={l.credit_applied} /> : ''}</td><td><Money value={l.outstanding} /></td>
             <td><StatusBadge status={l.status} /></td>
-            <td className="row-actions">{canPrepare && Number(l.outstanding) > 0 && <button onClick={() => setPreparing({ id: l.id!, label: l.label!, outstanding: Number(l.outstanding) })}>Prepare payment</button>}
+            <td className="row-actions">{canPrepare && Number(l.outstanding) > 0 && <button onClick={() => setPlanning({ id: l.id!, label: `${l.label}${l.is_opening_arrears ? ' (arrears)' : ''}`, outstanding: Number(l.outstanding), planned: plans.data?.get(l.id!)?.planned_payment_date ?? null })}>Plan</button>}
+              {canPrepare && Number(l.outstanding) > 0 && <button onClick={() => setPreparing({ id: l.id!, label: l.label!, outstanding: Number(l.outstanding) })}>Prepare payment</button>}
               {canPrepare && Number(l.outstanding) > 0 && /^gra$/i.test(l.payee ?? '') && (credits.data ?? []).some((c) => Number(c.remaining) > 0.005 && /^gra$/i.test(c.authority ?? '')) &&
                 <button onClick={() => setApplying({ id: l.id!, label: `${l.label}${l.period_start ? ` ${formatDate(l.period_start).slice(-8)}` : ' (arrears)'}`, outstanding: Number(l.outstanding) })}>Apply credit</button>}</td>
           </tr>
@@ -382,6 +398,7 @@ export function StatutoryPage() {
       </>)}
       {tab === 'lines' && <ResourceList resource={statutoryLines} />}
       {tab === 'credits' && <>
+        {canPrepare && <div className="form-actions" style={{ marginTop: 0 }}><button className="primary" onClick={() => setAddingCredit(true)}>+ Add credit</button></div>}
         <p className="muted small">What GRA (or another authority) owes MeLiNS (D-032). A credit set to offset VAT returns is used on each later VAT line automatically, oldest first.
           To set one against another GRA liability, such as PAYE arrears, use "Apply credit" on that line once GRA has approved the offset.</p>
         {table(<>
@@ -410,6 +427,12 @@ export function StatutoryPage() {
           </>)}
         </>}
       </>}
+      {addingCredit && (
+        <Dialog title="Add a tax credit" onClose={() => setAddingCredit(false)}>
+          <ResourceForm resource={taxCredits} row={null} onDone={async () => { setAddingCredit(false); await refresh() }} />
+        </Dialog>
+      )}
+      {planning && <PlanDialog line={planning} onClose={() => setPlanning(null)} onDone={async () => { setPlanning(null); await refresh() }} />}
       {applying && <ApplyCreditDialog line={applying} credits={(credits.data ?? []).filter((c) => Number(c.remaining) > 0.005 && /^gra$/i.test(c.authority ?? ''))}
         onClose={() => setApplying(null)} onDone={async () => { setApplying(null); await refresh() }} />}
       {preparing && (
@@ -424,6 +447,89 @@ export function StatutoryPage() {
           }} />
       )}
     </section>
+  )
+}
+
+/**
+ * A payment plan for a statutory line (D-040): one planned / agreed date for
+ * the whole amount, or dated instalments. Payments and credit count towards
+ * the instalments in date order; a passed date not covered is flagged missed.
+ */
+function PlanDialog({ line, onClose, onDone }: {
+  line: { id: string; label: string; outstanding: number; planned: string | null }
+  onClose: () => void
+  onDone: () => Promise<void>
+}) {
+  const existing = useQuery({ queryKey: ['plan-instalments', line.id], queryFn: async () =>
+    (await supabase.from('statutory_plan_instalments').select('id, due_on, amount, notes').eq('statutory_line_id', line.id).order('due_on')).data ?? [] })
+  const [mode, setMode] = useState<'single' | 'split' | null>(null)
+  const [planned, setPlanned] = useState(line.planned ?? '')
+  const [rows, setRows] = useState<{ due_on: string; amount: string; notes: string }[] | null>(null)
+  const action = useAction()
+  const current = mode ?? ((existing.data ?? []).length ? 'split' : 'single')
+  const list = rows ?? (existing.data ?? []).map((r) => ({ due_on: r.due_on, amount: String(r.amount), notes: r.notes ?? '' }))
+  const total = list.reduce((s, r) => s + (parseMoney(r.amount) ?? 0), 0)
+  const set = (i: number, patch: Partial<{ due_on: string; amount: string; notes: string }>) => setRows(list.map((r, j) => (j === i ? { ...r, ...patch } : r)))
+
+  async function save(e: FormEvent) {
+    e.preventDefault()
+    await action.run(async () => {
+      if (current === 'single') {
+        const { error } = await supabase.from('statutory_lines').update({ planned_payment_date: planned || null }).eq('id', line.id)
+        if (error) return friendlyError(error)
+        const { error: e2 } = await supabase.from('statutory_plan_instalments').delete().eq('statutory_line_id', line.id)
+        if (e2) return friendlyError(e2)
+      } else {
+        for (const r of list) {
+          if (!r.due_on || !(parseMoney(r.amount) ?? 0)) return 'Give every instalment a date and an amount'
+        }
+        if (new Set(list.map((r) => r.due_on)).size !== list.length) return 'Two instalments have the same date'
+        const { error } = await supabase.from('statutory_plan_instalments').delete().eq('statutory_line_id', line.id)
+        if (error) return friendlyError(error)
+        if (list.length) {
+          const { error: e2 } = await supabase.from('statutory_plan_instalments').insert(list.map((r) => ({
+            statutory_line_id: line.id, due_on: r.due_on, amount: parseMoney(r.amount)!, notes: r.notes || null })))
+          if (e2) return friendlyError(e2)
+        }
+        const last = [...list].sort((a, b) => a.due_on.localeCompare(b.due_on)).pop()
+        await supabase.from('statutory_lines').update({ planned_payment_date: last?.due_on ?? null }).eq('id', line.id)
+      }
+      await onDone()
+    })
+  }
+
+  return (
+    <Dialog title={`Payment plan: ${line.label}`} onClose={onClose}>
+      <form className="stack" onSubmit={save}>
+        <p className="muted small">The original due date stays as it is (it's overdue after that). Payments and credit count towards the planned dates in order;
+          a planned date that passes unpaid is flagged as missed and reminded (D-040). Still owed: <strong>{formatMoney(line.outstanding)}</strong>.</p>
+        <div className="chip-row">
+          <button type="button" className={`chip${current === 'single' ? ' on' : ''}`} onClick={() => setMode('single')}>One date</button>
+          <button type="button" className={`chip${current === 'split' ? ' on' : ''}`} onClick={() => { setMode('split'); if (!list.length) setRows([{ due_on: '', amount: String(line.outstanding), notes: '' }]) }}>Instalments</button>
+        </div>
+        {current === 'single' ? (
+          <label>Planned / agreed payment date<input type="date" value={planned} onChange={(e) => setPlanned(e.target.value)} />
+            <span className="help">Blank = no plan.</span></label>
+        ) : <>
+          <div className="table-wrap"><table className="compact">
+            <thead><tr><th>Date</th><th className="num">Amount</th><th>Note (e.g. agreed with GRA)</th><th /></tr></thead>
+            <tbody>{list.map((r, i) => (
+              <tr key={i}>
+                <td><input type="date" value={r.due_on} onChange={(e) => set(i, { due_on: e.target.value })} aria-label="Date" /></td>
+                <td><input inputMode="decimal" value={r.amount} onChange={(e) => set(i, { amount: e.target.value })} style={{ width: '8rem', textAlign: 'right' }} aria-label="Amount" /></td>
+                <td><input value={r.notes} onChange={(e) => set(i, { notes: e.target.value })} aria-label="Note" /></td>
+                <td><button type="button" className="link" onClick={() => setRows(list.filter((_, j) => j !== i))}>Remove</button></td>
+              </tr>
+            ))}</tbody>
+          </table></div>
+          <button type="button" onClick={() => setRows([...list, { due_on: '', amount: '', notes: '' }])}>+ Instalment</button>
+          <p className={`small ${Math.abs(total - line.outstanding) > 0.005 ? 'warn-text' : 'ok-text'}`}>
+            Instalments add up to {formatMoney(total)}{Math.abs(total - line.outstanding) > 0.005 ? `: ${formatMoney(Math.abs(total - line.outstanding))} ${total > line.outstanding ? 'more' : 'less'} than is still owed` : ', the amount still owed'}.</p>
+        </>}
+        {action.error && <p className="form-error">{action.error}</p>}
+        <div className="form-actions"><button className="primary" disabled={action.busy}>Save plan</button><button type="button" onClick={onClose}>Cancel</button></div>
+      </form>
+    </Dialog>
   )
 }
 

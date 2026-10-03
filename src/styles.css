@@ -262,3 +262,9 @@ a.bell .dot { position: absolute; top: 4px; right: 0; background: var(--red); co
 .crash { max-width: 560px; margin: 2rem auto; padding: 1.25rem 1.5rem; border: 1px solid var(--line); border-top: 4px solid var(--red); border-radius: var(--radius); background: #fff; }
 .crash-whole { margin: 15vh auto; }
 .crash pre { white-space: pre-wrap; word-break: break-word; background: var(--panel); padding: .5rem; border-radius: var(--radius); }
+
+/* Invoice: Bill to takes the left; the invoice facts sit compactly on the far right (D-039) */
+.bill-to-layout { align-items: flex-start; }
+.bill-to { flex: 1; min-width: 0; line-height: 1.4; }
+table.invoice-facts { width: auto; flex: none; font-size: .9em; }
+table.invoice-facts td:first-child { color: var(--muted); padding-right: .75rem; white-space: nowrap; }

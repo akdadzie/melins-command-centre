@@ -402,7 +402,7 @@ export function SetupWizard() {
   const refresh = () => qc.invalidateQueries({ queryKey: ['setup-status'] })
   const steps: { key: string; title: string; done: boolean; note: string; body: () => ReactNode }[] = s ? [
     { key: 'company', title: '1. Company and tax details', done: s.company, note: 'TIN, VAT number, address, payment details for invoices, Tier 2 trustee.',
-      body: () => <SettingsForm groups={['company']} defaultDate={GO_LIVE_MONTH} onSaved={refresh} /> },
+      body: () => <SettingsForm groups={['company', 'payment']} defaultDate={GO_LIVE_MONTH} onSaved={refresh} /> },
     { key: 'accounts', title: '2. Accounts and opening balances', done: s.accounts,
       note: `Each account's closing balance on 30 Sep 2026, with the opening date 1 Oct 2026 (D-029). GCB operating: GHS 83,115.12.${s.accountsDetail.length ? ` Entered: ${s.accountsDetail.map((a) => `${a.name} ${formatMoney(a.opening_balance)}`).join(', ')}.` : ''}`,
       body: () => <p><Link to="/accounts">Open Accounts</Link> and add each one.</p> },

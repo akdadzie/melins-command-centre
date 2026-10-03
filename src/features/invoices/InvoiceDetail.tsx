@@ -9,8 +9,7 @@ import { formatDate, formatMoney, parseMoney } from '../../lib/format'
 import { db, supabase } from '../../lib/supabase'
 import { friendlyError } from '../../resources/useLookups'
 import {
-  accountantMayApprove, getCreditNotes, getInvoice, getInvoiceLines, getPayments, taxSummary, type Invoice, type InvoiceLine,
-} from './api'
+  accountantMayApprove, getCreditNotes, getInvoice, getInvoiceLines, getPayments, taxSummary, type Invoice, type InvoiceLine, whtRateMissing } from './api'
 import { InvoicePrint } from './InvoicePrint'
 
 export function InvoiceDetail() {
@@ -83,6 +82,7 @@ export function InvoiceDetail() {
       </header>
       {action.error && <p className="form-error">{action.error}</p>}
       {invoice.status === 'disputed' && <p className="form-error">Disputed since {formatDate(invoice.dispute_date)}: {invoice.dispute_reason}{invoice.dispute_next_step && ` · Next step: ${invoice.dispute_next_step}`}</p>}
+      {whtRateMissing(invoice) && <p className="form-error">{whtRateMissing(invoice)} <Link to="/settings?tab=wht">WHT rates</Link></p>}
       {invoice.status === 'written_off' && <p className="form-error">Written off ({formatMoney(invoice.write_off_amount)}): {invoice.write_off_reason}</p>}
 
       <div className="detail-grid">
@@ -206,6 +206,7 @@ function Totals({ invoice, lines }: { invoice: Invoice; lines: InvoiceLine[] }) 
         {Number(invoice.retention_amount) > 0 && row(`Less retention (${invoice.retention_pct}% of ${invoice.retention_basis})`, invoice.retention_amount, { minus: true })}
         {Number(invoice.expected_wht) > 0 && row(`Expected WHT (${Math.round(Number(invoice.wht_rate) * 10000) / 100}%)`, invoice.expected_wht, { minus: true, muted: true })}
         {Number(invoice.expected_vat_withheld) > 0 && row('Expected VAT withheld', invoice.expected_vat_withheld, { minus: true, muted: true })}
+        {invoice.client?.deducts_wht && Number(invoice.wht_rate) === 0 && <tr><td colSpan={2} className="warn-text small">WHT rate not set: expected WHT is shown as 0</td></tr>}
         {row('Expected net receipt', invoice.expected_net_receipt, { muted: true })}
         {invoice.status !== 'draft' && <>
           {Number(invoice.credited_total) > 0 && row('Credit notes', invoice.credited_total, { minus: true })}

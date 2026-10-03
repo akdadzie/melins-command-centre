@@ -10,6 +10,7 @@ import { formatDate, formatMoney, parseMoney, todayAccra } from '../../lib/forma
 import { db, supabase } from '../../lib/supabase'
 import { lookups } from '../../resources/lookups'
 import { fetchLookupRows, friendlyError } from '../../resources/useLookups'
+import { autoSplit, balanceProblem, leftToAllocate, sumParts } from './allocation'
 
 const SOURCES = [
   ['office_cash_cheque', 'Cheque or cash at the office'], ['remittance_advice', 'Remittance advice'],
@@ -295,6 +296,8 @@ function ReceiptDetail({ id, onClose }: { id: string; onClose: () => void }) {
 
   const totalAllocated = (allocs.data ?? []).reduce((s, a) => s + total(a), 0)
   const remaining = total(r) - totalAllocated
+  const left = leftToAllocate(r, allocs.data ?? [])
+  const problem = balanceProblem(left, (n) => formatMoney(n))
 
   return (
     <Dialog title={`Payment from ${r.client?.name}`} onClose={onClose}>
@@ -318,8 +321,9 @@ function ReceiptDetail({ id, onClose }: { id: string; onClose: () => void }) {
 
       <h3>Allocation to invoices</h3>
       <p className="small">{formatMoney(total(r))} received (cash + WHT + VAT withheld) · {formatMoney(totalAllocated)} allocated ·{' '}
-        <strong className={Math.abs(remaining) > 0.005 ? 'warn-text' : undefined}>{formatMoney(remaining)} left</strong></p>
-      <Allocations receiptId={id} receipt={r} allocs={allocs.data ?? []} openInvoices={openInvoices.data ?? []} editable={!!editable} onChanged={refresh} remaining={remaining} />
+        <strong className={problem ? 'warn-text' : 'ok-text'}>{problem ? `${formatMoney(remaining)} left` : 'balanced'}</strong></p>
+      {problem && r.status === 'reported' && <p className="warn-text small">{problem}.</p>}
+      <Allocations receiptId={id} receipt={r} allocs={allocs.data ?? []} openInvoices={openInvoices.data ?? []} editable={!!editable} onChanged={refresh} />
 
       {r.status === 'confirmed' && r.review_status === 'recorded' && (
         <p className="warn-text small">Confirmed by the Owner as the Accountant's backup: waiting for the Accountant's review (D-028).</p>
@@ -329,11 +333,12 @@ function ReceiptDetail({ id, onClose }: { id: string; onClose: () => void }) {
       {action.error && <p className="form-error">{action.error}</p>}
       <div className="form-actions">
         {(role === 'accountant' || role === 'owner') && r.status === 'reported' && (
-          <button className="primary" disabled={action.busy} onClick={() => action.run(async () => {
-            const { error } = await supabase.from('receipts').update({ status: 'confirmed' }).eq('id', id)
-            if (error) return friendlyError(error)
-            await refresh()
-          })}>{role === 'owner' ? 'Confirm (as Accountant\'s backup)' : 'Confirm against statement'}</button>
+          <button className="primary" disabled={action.busy || !!problem} title={problem ? `Allocate it exactly first: ${problem}` : undefined}
+            onClick={() => action.run(async () => {
+              const { error } = await supabase.from('receipts').update({ status: 'confirmed' }).eq('id', id)
+              if (error) return friendlyError(error)
+              await refresh()
+            })}>{role === 'owner' ? 'Confirm (as Accountant\'s backup)' : 'Confirm against statement'}</button>
         )}
         {role === 'accountant' && r.status === 'confirmed' && r.review_status === 'recorded' && <>
           <button className="primary" disabled={action.busy} onClick={() => action.run(async () => {
@@ -370,60 +375,86 @@ function ReceiptDetail({ id, onClose }: { id: string; onClose: () => void }) {
 
 type Alloc = { id: string; invoice_id: string; cash_amount: number; wht_amount: number; vat_withheld_amount: number; invoice: { invoice_number: string | null; outstanding: number } | null }
 
-function Allocations({ receiptId, receipt, allocs, openInvoices, editable, onChanged, remaining }: {
+function Allocations({ receiptId, receipt, allocs, openInvoices, editable, onChanged }: {
   receiptId: string
   receipt: { cash_amount: number; wht_amount: number; vat_withheld_amount: number }
   allocs: Alloc[]
   openInvoices: { id: string; invoice_number: string | null; invoice_date: string; outstanding: number }[]
   editable: boolean
   onChanged: () => void
-  remaining: number
 }) {
   const action = useAction()
+  const [edit, setEdit] = useState<{ id: string; cash: string; wht: string; vat: string } | null>(null)
   const allocatedTo = new Set(allocs.map((a) => a.invoice_id))
   const candidates = useMemo(() => openInvoices.filter((i) => !allocatedTo.has(i.id)), [openInvoices, allocatedTo])
-  const left = (k: 'cash_amount' | 'wht_amount' | 'vat_withheld_amount') =>
-    Number(receipt[k]) - allocs.reduce((s, a) => s + Number(a[k]), 0)
+  const left = leftToAllocate(receipt, allocs)
+  const anyLeft = left.cash > 0.005 || left.wht > 0.005 || left.vat > 0.005
 
-  /** Allocate as much as fits: WHT and VAT withheld first (they belong to the invoice), then cash. */
-  function allocate(inv: { id: string; outstanding: number }) {
-    action.run(async () => {
-      let room = Number(inv.outstanding)
-      const take = (avail: number) => { const t = Math.max(0, Math.min(avail, room)); room -= t; return Math.round(t * 100) / 100 }
-      const wht = take(left('wht_amount')), vat = take(left('vat_withheld_amount')), cash = take(left('cash_amount'))
-      if (wht + vat + cash <= 0) return 'Nothing left to allocate'
-      const { error } = await supabase.from('receipt_allocations').insert({ receipt_id: receiptId, invoice_id: inv.id, cash_amount: cash, wht_amount: wht, vat_withheld_amount: vat })
-      if (error) return friendlyError(error)
-      onChanged()
-    })
-  }
+  /** min(what's left of the payment, what the invoice owes): WHT and VAT withheld first, then cash. */
+  const allocate = (inv: { id: string; outstanding: number }) => action.run(async () => {
+    const split = autoSplit(left, Number(inv.outstanding))
+    if (sumParts(split) <= 0) return 'Nothing left to allocate'
+    const { error } = await supabase.from('receipt_allocations').insert({ receipt_id: receiptId, invoice_id: inv.id, cash_amount: split.cash, wht_amount: split.wht, vat_withheld_amount: split.vat })
+    if (error) return friendlyError(error)
+    onChanged()
+  })
+
+  const saveEdit = () => edit && action.run(async () => {
+    const n = (v: string) => parseMoney(v === '' ? '0' : v)
+    const cash = n(edit.cash), wht = n(edit.wht), vat = n(edit.vat)
+    if (cash === null || wht === null || vat === null || cash < 0 || wht < 0 || vat < 0) return 'Enter each part as an amount (0 for none)'
+    if (cash + wht + vat <= 0) return 'Remove the allocation instead of setting it to 0'
+    const { error } = await supabase.from('receipt_allocations').update({ cash_amount: cash, wht_amount: wht, vat_withheld_amount: vat }).eq('id', edit.id)
+    if (error) return friendlyError(error)
+    setEdit(null); onChanged()
+  })
+
+  const cellInput = (k: 'cash' | 'wht' | 'vat', label: string) => edit && (
+    <input inputMode="decimal" value={edit[k]} aria-label={label} style={{ width: '7rem', textAlign: 'right' }}
+      onChange={(e) => setEdit({ ...edit, [k]: e.target.value })} />
+  )
 
   return (
     <>
       <div className="table-wrap"><table className="compact">
-        <thead><tr><th>Invoice</th><th className="num">Cash</th><th className="num">WHT</th><th className="num">VAT withheld</th>{editable && <th />}</tr></thead>
+        <thead><tr><th>Invoice</th><th className="num">Owes</th><th className="num">Cash</th><th className="num">WHT</th><th className="num">VAT withheld</th>{editable && <th />}</tr></thead>
         <tbody>
-          {allocs.map((a) => (
+          {allocs.map((a) => edit?.id === a.id ? (
+            <tr key={a.id}>
+              <td>{a.invoice?.invoice_number}</td><td><Money value={a.invoice?.outstanding} /></td>
+              <td className="num">{cellInput('cash', 'Cash')}</td><td className="num">{cellInput('wht', 'WHT')}</td><td className="num">{cellInput('vat', 'VAT withheld')}</td>
+              <td className="row-actions"><button className="primary" disabled={action.busy} onClick={saveEdit}>Save</button>
+                <button className="link" onClick={() => setEdit(null)}>Cancel</button></td>
+            </tr>
+          ) : (
             <tr key={a.id}>
               <td><Link to={`/invoices/${a.invoice?.invoice_number}`}>{a.invoice?.invoice_number}</Link></td>
+              <td><Money value={a.invoice?.outstanding} /></td>
               <td><Money value={a.cash_amount} /></td><td><Money value={a.wht_amount} /></td><td><Money value={a.vat_withheld_amount} /></td>
-              {editable && <td><button className="link" onClick={() => action.run(async () => {
-                const { error } = await supabase.from('receipt_allocations').delete().eq('id', a.id)
-                if (error) return friendlyError(error)
-                onChanged()
-              })}>Remove</button></td>}
+              {editable && <td className="row-actions">
+                <button className="link" onClick={() => setEdit({ id: a.id, cash: String(a.cash_amount), wht: String(a.wht_amount), vat: String(a.vat_withheld_amount) })}>Edit</button>
+                <button className="link" onClick={() => action.run(async () => {
+                  const { error } = await supabase.from('receipt_allocations').delete().eq('id', a.id)
+                  if (error) return friendlyError(error)
+                  onChanged()
+                })}>Remove</button></td>}
             </tr>
           ))}
-          {allocs.length === 0 && <tr><td colSpan={5} className="muted">Not allocated yet.</td></tr>}
+          {allocs.length === 0 && <tr><td colSpan={6} className="muted">Not allocated yet.</td></tr>}
+          <tr className="total-row"><td colSpan={2}>Still to allocate</td>
+            <td className={left.cash < -0.005 ? 'bad' : undefined}><Money value={left.cash} /></td>
+            <td className={left.wht < -0.005 ? 'bad' : undefined}><Money value={left.wht} /></td>
+            <td className={left.vat < -0.005 ? 'bad' : undefined}><Money value={left.vat} /></td>{editable && <td />}</tr>
         </tbody>
       </table></div>
-      {editable && remaining > 0.005 && (
+      <p className="muted small">"Owes" is what the invoice still owes after this payment (retention already allowed for).</p>
+      {editable && anyLeft && (
         candidates.length === 0 ? <p className="muted small">No other open invoices for this client.</p> : (
           <div className="table-wrap"><table className="compact">
             <thead><tr><th>Open invoice</th><th>Date</th><th className="num">Outstanding</th><th /></tr></thead>
             <tbody>{candidates.map((i) => (
               <tr key={i.id}><td>{i.invoice_number}</td><td>{formatDate(i.invoice_date)}</td><td><Money value={i.outstanding} /></td>
-                <td><button disabled={action.busy} onClick={() => allocate(i)}>Allocate</button></td></tr>
+                <td><button disabled={action.busy} onClick={() => allocate(i)}>Allocate {formatMoney(sumParts(autoSplit(left, Number(i.outstanding))))}</button></td></tr>
             ))}</tbody>
           </table></div>
         )
