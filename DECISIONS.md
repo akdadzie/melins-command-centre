@@ -259,6 +259,26 @@ It is modelled as Tier 3 (employee and employer), with a dated rate setting defa
   - Email, 2FA, pg_cron and pg_net work the same on free.
 - **Upgrading** doesn't move or change any data, and needs no change to the app or its settings. It's on the 1 Nov checklist in `docs/GO_LIVE_PRODUCTION.md`.
 
+### Security Advisor fixes, 14 Oct 2026 (D-056)
+
+**D-056: Security Advisor fixes (migration 2400).** Supabase's Security Advisor reported `auth_users_exposed` (critical) on staging and production.
+- **What was flagged.** One view, `public.user_directory` (Settings → Users, and the setup wizard's "users invited" check), joined `auth.users` in the API-exposed `public` schema. It already returned rows only to the Owner with 2FA; anon and every other role got none. This was checked on staging before the fix.
+- **Fix.** It's now a function, `user_directory()`, with the same columns and the same Owner-only check. It runs with owner rights and anon can't call it. The app calls it with `rpc('user_directory')`.
+- **Emails, not names.** Two other routes let any signed-in user read other people's emails:
+  - `profiles`: every active user could read every profile. Now each user reads only their own row, and the Owner reads all of them through `profiles_owner_write`. Approvals and notifications read profiles inside functions that run with owner rights, so they're unaffected.
+  - `staff.email`: the Staff screen loads every column for every role. The email moved to `staff_private` (readable by the Owner, finance roles and the person themself), with existing values kept. "Email (log-in)" left the Staff form. The Owner enters it in Settings → Users → Invite, which still prefills it from `staff_private`. Invites write it there.
+  - **Names didn't change.** `staff.full_name` is readable by every signed-in role, as before (Timesheet approvals, Team, Leave, Payroll).
+- **anon gets nothing in `public`.** It has no table, view, sequence or function, now or for objects created later (default privileges). Nothing in the app reads data before sign-in.
+- **`function_search_path_mutable`.** All 20 functions flagged now have `search_path = ''`. All of them already used schema-qualified names.
+- **Still on the Advisor, by design:**
+  - `security_definer_view` (25 views): A-029. Each view checks the role itself, and that's how they hide columns. anon can no longer select from them.
+  - `authenticated_security_definer_function_executable`: the app's RPCs, each with its own role check.
+  - `auth_leaked_password_protection`: a dashboard setting, available on Pro (D-055). Turn it on with the upgrade.
+- **Tests.**
+  - `supabase/tests/99_test_security_advisor.sql`.
+  - Acceptance section `acceptance/tests/08_emails_names.ts`. It checks that anon, Staff, NSP, Admin and the Project lead see no one else's email, that the lead sees team names on Timesheet approvals, Team and Leave, that Directors and the Accountant see staff names, and that the Owner still sees emails.
+- **Rollout.** Applied to staging on 14 Oct. Production gets migration 2400 with the next release, under D-053.
+
 ---
 
 ## Assumptions
@@ -352,7 +372,7 @@ These came up while building the schema. Each is easy to change if the Owner or 
 - Once Paid, a payment is locked apart from its review fields and attachments.
 - Cash leaves the ledger only when the payment is marked Paid.
 
-**A-029: Views run with owner rights.** Views don't use `security_invoker`; each checks the role itself. That's how they hide columns (for example `account_picker`, `my_jobs`, `leave_calendar`, `receipt_tasks`). The Supabase linter will flag these as "security definer views". That's expected.
+**A-029: Views run with owner rights.** Views don't use `security_invoker`; each checks the role itself. That's how they hide columns (for example `account_picker`, `my_jobs`, `leave_calendar`, `receipt_tasks`). The Supabase linter will flag these as "security definer views". That's expected. Since D-056, anon can't select from any of them.
 
 **A-030: What blocks month close.**
 - Money entries that are unreviewed or queried.

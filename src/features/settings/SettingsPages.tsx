@@ -371,7 +371,7 @@ export function useSetupStatus() {
         supabase.from('tax_codes').select('id, is_active, versions:tax_code_versions(effective_from, confirmed_at)'),
         supabase.from('statutory_lines').select('id, amount_due').eq('is_opening_arrears', true),
         supabase.from('wht_rates').select('id'),
-        supabase.from('user_directory').select('user_id, role'),
+        supabase.rpc('user_directory').select('user_id, role'),
         supabase.from('tax_credits').select('amount'),
       ])
       const s = settings.data

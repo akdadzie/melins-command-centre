@@ -14,7 +14,7 @@ values ('NSP1@T', jsonb_build_object('full_name', 'NSP1 - Technical', 'role', 's
 insert into auth.users (email) values ('stray@t');
 do $$ begin
   perform tests.eq((select role::text from public.profiles where email = 'nsp1@t'), 'staff', 'invite creates the profile with its role');
-  perform tests.eq((select email from public.staff where full_name = 'NSP1 - Technical'), 'nsp1@t', 'invite links the staff record');
+  perform tests.eq((select sp.email from public.staff_private sp join public.staff s on s.id = sp.staff_id where s.full_name = 'NSP1 - Technical'), 'nsp1@t', 'invite links the staff record');
   perform tests.eq((select count(*)::int from public.profiles where email = 'stray@t'), 0, 'no role in the invite, no profile');
 end $$;
 
@@ -22,13 +22,13 @@ end $$;
 select tests.login('owner@t');
 set role authenticated;
 do $$ begin
-  perform tests.ok((select count(*) from public.user_directory) >= 9, 'owner sees the user directory');
+  perform tests.ok((select count(*) from public.user_directory()) >= 9, 'owner sees the user directory');
 end $$;
 reset role;
 select tests.login('acct@t');
 set role authenticated;
 do $$ begin
-  perform tests.eq((select count(*)::int from public.user_directory), 0, 'accountant does not see the user directory');
+  perform tests.eq((select count(*)::int from public.user_directory()), 0, 'accountant does not see the user directory');
   perform tests.throws($q$select app.bootstrap_owner('x@t')$q$, '%permission denied%', 'API roles cannot call bootstrap');
 end $$;
 reset role;

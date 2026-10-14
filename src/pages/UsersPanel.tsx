@@ -14,14 +14,16 @@ export function UsersPanel() {
   const users = useQuery({
     queryKey: ['user_directory'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('user_directory').select('*').order('full_name')
+      const { data, error } = await supabase.rpc('user_directory').order('full_name')
       if (error) throw error
       return data
     },
   })
   const staff = useQuery({
     queryKey: ['lookup', 'staff-for-invite'],
-    queryFn: async () => (await supabase.from('staff').select('id, full_name, email').order('full_name')).data ?? [],
+    // The email is on staff_private (D-056), which only the Owner and finance roles read.
+    queryFn: async () => ((await supabase.from('staff').select('id, full_name, private:staff_private(email)').order('full_name')).data ?? [])
+      .map((s) => ({ id: s.id, full_name: s.full_name, email: s.private?.email ?? null })),
   })
   const directors = useQuery({
     queryKey: ['lookup', 'directors-for-invite'],

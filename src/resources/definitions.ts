@@ -105,7 +105,6 @@ export const staff: ResourceDef = {
     { name: 'job_title', label: 'Job title', type: 'text', required: true, list: true },
     { name: 'budget_role_id', label: 'Budget role', type: 'lookup', required: true, lookup: lookups.budgetRole, list: true,
       help: 'Timesheet hours roll up by this role (D-014).' },
-    { name: 'email', label: 'Email (log-in)', type: 'email' },
     { name: 'approver_staff_id', label: 'Approver', type: 'lookup', lookup: lookups.staff, list: true,
       help: 'Approves timesheets and leave (D-015). Blank only for the Managing Director.' },
     { name: 'billable_default', label: 'Time billable by default', type: 'boolean', default: true },

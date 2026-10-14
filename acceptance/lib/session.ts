@@ -56,6 +56,9 @@ async function withSecondFactor(who: Who): Promise<SupabaseClient> {
   return c
 }
 
+// Not signed in: the public (anon) key only, as the login page has.
+export function anon(): SupabaseClient { return newClient() }
+
 // as('owner') = signed in with 2FA where the role needs it; as('owner', 'aal1') = password only.
 export function as(who: Who, level: 'aal1' | 'aal2' = 'aal2'): Promise<SupabaseClient> {
   const key = `${who}:${level}`

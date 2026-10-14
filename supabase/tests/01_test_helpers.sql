@@ -13,7 +13,9 @@ begin
   insert into public.profiles (user_id, full_name, email, role, staff_id)
   values (uid, p_name, p_email, p_role, (select id from public.staff where full_name = p_staff_name));
   if p_staff_name is not null then
-    update public.staff set email = p_email where full_name = p_staff_name;
+    insert into public.staff_private (staff_id, email)
+    select id, p_email from public.staff where full_name = p_staff_name
+    on conflict (staff_id) do update set email = excluded.email;
   end if;
   if p_director_name is not null then
     update public.directors set profile_id = uid where full_name = p_director_name;

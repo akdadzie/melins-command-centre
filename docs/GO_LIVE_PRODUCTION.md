@@ -137,7 +137,7 @@ Only real data from here on. In the app (https://app.themelins.com), **Settings*
 ## Full go-live: 1 Nov 2026
 - [ ] **Upgrade production to Supabase Pro** (D-009, D-055): Supabase (production project `jqplwpwmpizgkpyrseqo`) → Settings → Billing → Pro. Do this before NSP3 starts entering money records. Nothing in the app or its settings changes. Afterwards, check that Database → Backups shows daily backups.
 - [ ] Before 1 Nov:
-  - NSP1–3's names and emails on their staff records; invite them (NSP3 as Admin, linked to "NSP3 - Admin").
+  - NSP1–3's names on their staff records; invite them from Settings → Users with their emails (D-056) (NSP3 as Admin, linked to "NSP3 - Admin").
   - Invite the Accountant, and the Directors if you want them on now; they need 2FA.
   - The Accountant enters and confirms the tax codes (Setup step 3) and the WHT rates (step 5).
   - Check the MoMo number, TIN, VAT number and address are in.
