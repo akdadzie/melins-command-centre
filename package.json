@@ -10,7 +10,9 @@
     "typecheck": "tsc -b",
     "test": "vitest run",
     "test:db": "bash supabase/tests/run.sh",
-    "gen:types": "supabase gen types typescript --linked --schema public > src/lib/database.types.ts"
+    "gen:types": "supabase gen types typescript --linked --schema public > src/lib/database.types.ts",
+    "acceptance": "vitest run --config acceptance/vitest.config.ts",
+    "acceptance:teardown": "node --experimental-strip-types acceptance/teardown.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.2",

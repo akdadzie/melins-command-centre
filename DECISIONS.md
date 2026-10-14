@@ -41,7 +41,7 @@ Every decision, assumption and change made during the build goes here. Read this
 
 **D-008 (Q-04): Front end.** React + TypeScript + Vite (confirms A-001). The Owner will say if the Scharke IMS differs.
 
-**D-009 (Q-05): Backups and plans.** The weekly backup goes to a restricted Google Drive folder, accessible to the Owner and Accountant only, **never a Git repo**. Production runs on Supabase **Pro** (no pausing, daily backups); staging runs on the **free** plan (can pause when idle).
+**D-009 (Q-05): Backups and plans.** The weekly backup goes to a restricted Google Drive folder, accessible to the Owner and Accountant only, **never a Git repo**. Production runs on Supabase **Pro** (no pausing, daily backups); staging runs on the **free** plan (can pause when idle). *Amended by D-055 (9 Oct 2026): production starts on free for the soft launch, and moves to Pro before 1 Nov.*
 
 #### Contradictions resolved
 **D-010 (Q-06): Payments to the Owner.** The Owner approves payments made to the Owner. Each such approval is audit-logged and flagged. **Both Directors are notified**, and the **Accountant must review** the payment (it counts as unreviewed for month close until reviewed). **Directors remain strictly read-only**, with no approve permission of any kind.
@@ -240,6 +240,24 @@ It is modelled as Tier 3 (employee and employer), with a dated rate setting defa
 - **While the Owner is away,** Francis approves his team as usual (D-015), including late entries up to day 10. Approvals that are the Owner's stay with the Owner: Francis's own timesheets and leave, entries after day 10, and leave over a balance or cap. The Owner approves them from a phone, or they wait. Waiting only delays freezing the rates. No delegation was built: none was asked for, and a Project lead approving his own time would go against brief §4.
 
 **D-053: Releases once production is live.** From 12 Oct, `main` deploys to app.themelins.com. Changes are built on branches, tried on staging (the `staging` branch deploy, or the Owner's local app against staging) and merged to `main` only once they've been tried. Migrations go to staging first, then production (D-002); the folder is linked back to staging after every production push.
+
+### Acceptance suite and production plan, 9 Oct 2026 (D-054, D-055)
+
+**D-054: Phase A acceptance suite on staging.** Asked for by the Owner on 9 Oct 2026, to run before the 1 Nov go-live.
+- **What it is.** `npm run acceptance` (folder `acceptance/`) runs the Phase A acceptance tests (brief §13) through the real API, signed in as each role, with an authenticator code for the Owner, Directors and Accountant.
+- **Staging only.** It refuses to run unless both the linked project and `VITE_SUPABASE_URL` are staging (`cipklttzbvbsivzrkcvq`), and it never touches production (`jqplwpwmpizgkpyrseqo`).
+- **Its own test data.** It creates its own users, staff, accounts, tax codes, clients and jobs, all named "ACC …", with log-ins at the reserved `melins-acceptance.invalid` domain. Month close and payroll use Feb and Aug 2019, before any real staff or account existed.
+- **Staging is put back afterwards.** Every row of `public` and `app` is snapshotted first. Afterwards, rows the run added are deleted and rows it changed are restored, with triggers off, as in a backup restore. `npm run acceptance:teardown` finishes the job if a run is interrupted. Don't use staging during a run (a few minutes): anything entered meanwhile is removed.
+- **No email from test runs (migration 2300).** Notifications to `.invalid` addresses are never emailed. During a run, `app.system_config.suppress_email_until` keeps every notification in-app only, including ones to the real Owner. It expires on its own after 30 minutes. Neither is ever set on production.
+- **Not automated:** acceptance items 1 (domain and email), 2 (routes, and reminder links opening the record) and 28 (CSV import and export on every screen, and the backup running). Also the phone half of 29 (under 30 seconds on a phone). These are in the manual checklist in `docs/ACCEPTANCE.md`.
+
+**D-055: Production starts on the Supabase free plan; Pro before 1 Nov.** *Amends D-009.*
+- **Plan.** Production (`jqplwpwmpizgkpyrseqo`) runs on the **free** plan for the soft launch (12 Oct, timesheets and leave for five people). It's upgraded to **Pro** before the full go-live on **1 Nov 2026**, when money records start.
+- **Until the upgrade:**
+  - Supabase takes **no daily backups**, so the weekly GitHub backup to Google Drive (A-015, A-046) is the only one. Run it by hand once after the soft launch, and before any risky change.
+  - A free project **pauses after a week with no activity**. Daily timesheets keep it active, but if nobody logs in for a week (e.g. over a holiday), restore it from the Supabase dashboard.
+  - Email, 2FA, pg_cron and pg_net work the same on free.
+- **Upgrading** doesn't move or change any data, and needs no change to the app or its settings. It's on the 1 Nov checklist in `docs/GO_LIVE_PRODUCTION.md`.
 
 ---
 

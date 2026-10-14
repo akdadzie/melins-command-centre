@@ -1,0 +1,8 @@
+// The sections run in this order and build on each other (one worker).
+import './tests/01_setup'
+import './tests/02_access'
+import './tests/03_money_in'
+import './tests/04_money_out'
+import './tests/05_close'
+import './tests/06_payroll'
+import './tests/07_time_leave'

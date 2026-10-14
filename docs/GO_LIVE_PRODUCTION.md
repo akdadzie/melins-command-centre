@@ -26,7 +26,7 @@ Tick each step as you go. Each section says roughly how long it takes. **Never p
 
 ### 2. Supabase production project: settings (15 min)
 In the Supabase dashboard, open the **production** project:
-- [ ] **Plan:** Pro (D-009). Settings → Billing.
+- [ ] **Plan:** leave it on **Free** for the soft launch (D-055). It moves to Pro before 1 Nov (see "Full go-live" below). Until then Supabase takes no daily backups, so §9's weekly backup is the only one.
 - [ ] **Authentication → Sign In / Providers:** Email on; **"Allow new users to sign up" off**.
 - [ ] **Authentication → Multi-Factor:** TOTP (authenticator app) on.
 - [ ] **Authentication → URL Configuration:** Site URL `https://app.themelins.com`; Redirect URLs `https://app.themelins.com/**`.
@@ -132,8 +132,10 @@ Only real data from here on. In the app (https://app.themelins.com), **Settings*
 - **Francis approves** Ernest's, Ibrahim's and Nana's timesheets and leave, including late entries up to their 10th working day.
 - **Your own approvals stay with you.** These are Francis's own timesheets and leave, anything past day 10, and any leave over a balance or yearly cap. Approve them from your phone, or they wait until you're back. Waiting does no harm: approval only freezes the rates on the entries. Your own time is approved automatically. (D-052)
 - Emails for anything waiting on you go to your inbox, as long as §4's email set-up is done.
+- Production is on the free plan until the upgrade below. It pauses after a week with nobody signed in. Daily timesheets prevent that, but if it does pause, restore it from the Supabase dashboard (D-055).
 
 ## Full go-live: 1 Nov 2026
+- [ ] **Upgrade production to Supabase Pro** (D-009, D-055): Supabase (production project `jqplwpwmpizgkpyrseqo`) → Settings → Billing → Pro. Do this before NSP3 starts entering money records. Nothing in the app or its settings changes. Afterwards, check that Database → Backups shows daily backups.
 - [ ] Before 1 Nov:
   - NSP1–3's names and emails on their staff records; invite them (NSP3 as Admin, linked to "NSP3 - Admin").
   - Invite the Accountant, and the Directors if you want them on now; they need 2FA.
