@@ -239,13 +239,6 @@ export type Database = {
             foreignKeyName: "billing_milestones_job_id_fkey"
             columns: ["job_id"]
             isOneToOne: false
-            referencedRelation: "job_money_status"
-            referencedColumns: ["job_id"]
-          },
-          {
-            foreignKeyName: "billing_milestones_job_id_fkey"
-            columns: ["job_id"]
-            isOneToOne: false
             referencedRelation: "jobs"
             referencedColumns: ["id"]
           },
@@ -255,13 +248,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "jobs_flagged"
             referencedColumns: ["job_id"]
-          },
-          {
-            foreignKeyName: "billing_milestones_job_id_fkey"
-            columns: ["job_id"]
-            isOneToOne: false
-            referencedRelation: "my_jobs"
-            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "billing_milestones_job_id_fkey"
@@ -681,13 +667,6 @@ export type Database = {
             foreignKeyName: "director_payments_account_id_fkey"
             columns: ["account_id"]
             isOneToOne: false
-            referencedRelation: "account_picker"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "director_payments_account_id_fkey"
-            columns: ["account_id"]
-            isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
@@ -822,13 +801,6 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "account_balances"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "director_transactions_account_id_fkey"
-            columns: ["account_id"]
-            isOneToOne: false
-            referencedRelation: "account_picker"
             referencedColumns: ["id"]
           },
           {
@@ -977,13 +949,6 @@ export type Database = {
             referencedRelation: "expenses"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "expense_taxes_expense_id_fkey"
-            columns: ["expense_id"]
-            isOneToOne: false
-            referencedRelation: "supplier_bills_open"
-            referencedColumns: ["id"]
-          },
         ]
       }
       expenses: {
@@ -1116,13 +1081,6 @@ export type Database = {
             foreignKeyName: "expenses_account_id_fkey"
             columns: ["account_id"]
             isOneToOne: false
-            referencedRelation: "account_picker"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "expenses_account_id_fkey"
-            columns: ["account_id"]
-            isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
@@ -1165,13 +1123,6 @@ export type Database = {
             foreignKeyName: "expenses_job_id_fkey"
             columns: ["job_id"]
             isOneToOne: false
-            referencedRelation: "job_money_status"
-            referencedColumns: ["job_id"]
-          },
-          {
-            foreignKeyName: "expenses_job_id_fkey"
-            columns: ["job_id"]
-            isOneToOne: false
             referencedRelation: "jobs"
             referencedColumns: ["id"]
           },
@@ -1181,13 +1132,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "jobs_flagged"
             referencedColumns: ["job_id"]
-          },
-          {
-            foreignKeyName: "expenses_job_id_fkey"
-            columns: ["job_id"]
-            isOneToOne: false
-            referencedRelation: "my_jobs"
-            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "expenses_job_id_fkey"
@@ -1340,13 +1284,6 @@ export type Database = {
             columns: ["expense_id"]
             isOneToOne: true
             referencedRelation: "expenses"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "invoice_lines_expense_fk"
-            columns: ["expense_id"]
-            isOneToOne: true
-            referencedRelation: "supplier_bills_open"
             referencedColumns: ["id"]
           },
           {
@@ -1568,13 +1505,6 @@ export type Database = {
             foreignKeyName: "invoices_job_id_fkey"
             columns: ["job_id"]
             isOneToOne: false
-            referencedRelation: "job_money_status"
-            referencedColumns: ["job_id"]
-          },
-          {
-            foreignKeyName: "invoices_job_id_fkey"
-            columns: ["job_id"]
-            isOneToOne: false
             referencedRelation: "jobs"
             referencedColumns: ["id"]
           },
@@ -1584,13 +1514,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "jobs_flagged"
             referencedColumns: ["job_id"]
-          },
-          {
-            foreignKeyName: "invoices_job_id_fkey"
-            columns: ["job_id"]
-            isOneToOne: false
-            referencedRelation: "my_jobs"
-            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "invoices_job_id_fkey"
@@ -1680,13 +1603,6 @@ export type Database = {
             foreignKeyName: "job_contracts_job_id_fkey"
             columns: ["job_id"]
             isOneToOne: false
-            referencedRelation: "job_money_status"
-            referencedColumns: ["job_id"]
-          },
-          {
-            foreignKeyName: "job_contracts_job_id_fkey"
-            columns: ["job_id"]
-            isOneToOne: false
             referencedRelation: "jobs"
             referencedColumns: ["id"]
           },
@@ -1696,13 +1612,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "jobs_flagged"
             referencedColumns: ["job_id"]
-          },
-          {
-            foreignKeyName: "job_contracts_job_id_fkey"
-            columns: ["job_id"]
-            isOneToOne: false
-            referencedRelation: "my_jobs"
-            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "job_contracts_job_id_fkey"
@@ -1762,13 +1671,6 @@ export type Database = {
             foreignKeyName: "job_hour_budgets_job_id_fkey"
             columns: ["job_id"]
             isOneToOne: false
-            referencedRelation: "job_money_status"
-            referencedColumns: ["job_id"]
-          },
-          {
-            foreignKeyName: "job_hour_budgets_job_id_fkey"
-            columns: ["job_id"]
-            isOneToOne: false
             referencedRelation: "jobs"
             referencedColumns: ["id"]
           },
@@ -1778,13 +1680,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "jobs_flagged"
             referencedColumns: ["job_id"]
-          },
-          {
-            foreignKeyName: "job_hour_budgets_job_id_fkey"
-            columns: ["job_id"]
-            isOneToOne: false
-            referencedRelation: "my_jobs"
-            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "job_hour_budgets_job_id_fkey"
@@ -1827,13 +1722,6 @@ export type Database = {
             foreignKeyName: "job_team_job_id_fkey"
             columns: ["job_id"]
             isOneToOne: false
-            referencedRelation: "job_money_status"
-            referencedColumns: ["job_id"]
-          },
-          {
-            foreignKeyName: "job_team_job_id_fkey"
-            columns: ["job_id"]
-            isOneToOne: false
             referencedRelation: "jobs"
             referencedColumns: ["id"]
           },
@@ -1843,13 +1731,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "jobs_flagged"
             referencedColumns: ["job_id"]
-          },
-          {
-            foreignKeyName: "job_team_job_id_fkey"
-            columns: ["job_id"]
-            isOneToOne: false
-            referencedRelation: "my_jobs"
-            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "job_team_job_id_fkey"
@@ -2248,13 +2129,6 @@ export type Database = {
             foreignKeyName: "ledger_entries_account_id_fkey"
             columns: ["account_id"]
             isOneToOne: false
-            referencedRelation: "account_picker"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ledger_entries_account_id_fkey"
-            columns: ["account_id"]
-            isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
@@ -2476,13 +2350,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "payment_out_items_expense_id_fkey"
-            columns: ["expense_id"]
-            isOneToOne: false
-            referencedRelation: "supplier_bills_open"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "payment_out_items_payment_out_id_fkey"
             columns: ["payment_out_id"]
             isOneToOne: false
@@ -2603,13 +2470,6 @@ export type Database = {
             foreignKeyName: "payments_out_account_id_fkey"
             columns: ["account_id"]
             isOneToOne: false
-            referencedRelation: "account_picker"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "payments_out_account_id_fkey"
-            columns: ["account_id"]
-            isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
@@ -2645,13 +2505,6 @@ export type Database = {
             foreignKeyName: "payments_out_job_id_fkey"
             columns: ["job_id"]
             isOneToOne: false
-            referencedRelation: "job_money_status"
-            referencedColumns: ["job_id"]
-          },
-          {
-            foreignKeyName: "payments_out_job_id_fkey"
-            columns: ["job_id"]
-            isOneToOne: false
             referencedRelation: "jobs"
             referencedColumns: ["id"]
           },
@@ -2661,13 +2514,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "jobs_flagged"
             referencedColumns: ["job_id"]
-          },
-          {
-            foreignKeyName: "payments_out_job_id_fkey"
-            columns: ["job_id"]
-            isOneToOne: false
-            referencedRelation: "my_jobs"
-            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "payments_out_job_id_fkey"
@@ -2954,13 +2800,6 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "account_balances"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "payroll_runs_account_id_fkey"
-            columns: ["account_id"]
-            isOneToOne: false
-            referencedRelation: "account_picker"
             referencedColumns: ["id"]
           },
           {
@@ -3293,13 +3132,6 @@ export type Database = {
             foreignKeyName: "receipts_account_id_fkey"
             columns: ["account_id"]
             isOneToOne: false
-            referencedRelation: "account_picker"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "receipts_account_id_fkey"
-            columns: ["account_id"]
-            isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
@@ -3351,13 +3183,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "receipts_statement_line_id_fkey"
-            columns: ["statement_line_id"]
-            isOneToOne: true
-            referencedRelation: "receipt_tasks"
-            referencedColumns: ["statement_line_id"]
           },
           {
             foreignKeyName: "receipts_statement_line_id_fkey"
@@ -3420,13 +3245,6 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "account_balances"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "reconciliations_account_id_fkey"
-            columns: ["account_id"]
-            isOneToOne: false
-            referencedRelation: "account_picker"
             referencedColumns: ["id"]
           },
           {
@@ -3515,13 +3333,6 @@ export type Database = {
             foreignKeyName: "recurring_expenses_account_id_fkey"
             columns: ["account_id"]
             isOneToOne: false
-            referencedRelation: "account_picker"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "recurring_expenses_account_id_fkey"
-            columns: ["account_id"]
-            isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
@@ -3550,13 +3361,6 @@ export type Database = {
             foreignKeyName: "recurring_expenses_job_id_fkey"
             columns: ["job_id"]
             isOneToOne: false
-            referencedRelation: "job_money_status"
-            referencedColumns: ["job_id"]
-          },
-          {
-            foreignKeyName: "recurring_expenses_job_id_fkey"
-            columns: ["job_id"]
-            isOneToOne: false
             referencedRelation: "jobs"
             referencedColumns: ["id"]
           },
@@ -3566,13 +3370,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "jobs_flagged"
             referencedColumns: ["job_id"]
-          },
-          {
-            foreignKeyName: "recurring_expenses_job_id_fkey"
-            columns: ["job_id"]
-            isOneToOne: false
-            referencedRelation: "my_jobs"
-            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "recurring_expenses_job_id_fkey"
@@ -4004,13 +3801,6 @@ export type Database = {
             foreignKeyName: "staff_loan_repayments_account_id_fkey"
             columns: ["account_id"]
             isOneToOne: false
-            referencedRelation: "account_picker"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "staff_loan_repayments_account_id_fkey"
-            columns: ["account_id"]
-            isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
@@ -4019,13 +3809,6 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "staff_loan_repayments_loan_id_fkey"
-            columns: ["loan_id"]
-            isOneToOne: false
-            referencedRelation: "staff_loan_picker"
             referencedColumns: ["id"]
           },
           {
@@ -4154,13 +3937,6 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "account_balances"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "staff_loans_account_id_fkey"
-            columns: ["account_id"]
-            isOneToOne: false
-            referencedRelation: "account_picker"
             referencedColumns: ["id"]
           },
           {
@@ -4317,13 +4093,6 @@ export type Database = {
             foreignKeyName: "staff_payments_account_id_fkey"
             columns: ["account_id"]
             isOneToOne: false
-            referencedRelation: "account_picker"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "staff_payments_account_id_fkey"
-            columns: ["account_id"]
-            isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
@@ -4446,13 +4215,6 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "account_balances"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "statement_imports_account_id_fkey"
-            columns: ["account_id"]
-            isOneToOne: false
-            referencedRelation: "account_picker"
             referencedColumns: ["id"]
           },
           {
@@ -4736,13 +4498,6 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "account_balances"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "statutory_payments_account_id_fkey"
-            columns: ["account_id"]
-            isOneToOne: false
-            referencedRelation: "account_picker"
             referencedColumns: ["id"]
           },
           {
@@ -5346,13 +5101,6 @@ export type Database = {
             foreignKeyName: "timesheet_entries_job_id_fkey"
             columns: ["job_id"]
             isOneToOne: false
-            referencedRelation: "job_money_status"
-            referencedColumns: ["job_id"]
-          },
-          {
-            foreignKeyName: "timesheet_entries_job_id_fkey"
-            columns: ["job_id"]
-            isOneToOne: false
             referencedRelation: "jobs"
             referencedColumns: ["id"]
           },
@@ -5367,22 +5115,8 @@ export type Database = {
             foreignKeyName: "timesheet_entries_job_id_fkey"
             columns: ["job_id"]
             isOneToOne: false
-            referencedRelation: "my_jobs"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "timesheet_entries_job_id_fkey"
-            columns: ["job_id"]
-            isOneToOne: false
             referencedRelation: "retention_by_job"
             referencedColumns: ["job_id"]
-          },
-          {
-            foreignKeyName: "timesheet_entries_leave_request_id_fkey"
-            columns: ["leave_request_id"]
-            isOneToOne: false
-            referencedRelation: "leave_calendar"
-            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "timesheet_entries_leave_request_id_fkey"
@@ -5515,13 +5249,6 @@ export type Database = {
             foreignKeyName: "transfers_from_account_id_fkey"
             columns: ["from_account_id"]
             isOneToOne: false
-            referencedRelation: "account_picker"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "transfers_from_account_id_fkey"
-            columns: ["from_account_id"]
-            isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
@@ -5551,13 +5278,6 @@ export type Database = {
             columns: ["to_account_id"]
             isOneToOne: false
             referencedRelation: "account_balances"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "transfers_to_account_id_fkey"
-            columns: ["to_account_id"]
-            isOneToOne: false
-            referencedRelation: "account_picker"
             referencedColumns: ["id"]
           },
           {
@@ -5710,16 +5430,6 @@ export type Database = {
           name: string | null
           type: string | null
         }
-        Insert: {
-          id?: string | null
-          name?: string | null
-          type?: string | null
-        }
-        Update: {
-          id?: string | null
-          name?: string | null
-          type?: string | null
-        }
         Relationships: []
       }
       company_profile: {
@@ -5743,48 +5453,6 @@ export type Database = {
           registered_name: string | null
           tin: string | null
           vat_number: string | null
-        }
-        Insert: {
-          accounts_email?: string | null
-          address?: string | null
-          company_email?: never
-          company_phone?: string | null
-          company_website?: string | null
-          effective_from?: string | null
-          invoice_payment_details?: string | null
-          invoice_terms_days?: number | null
-          payment_bank_account_name?: string | null
-          payment_bank_account_number?: string | null
-          payment_bank_branch?: string | null
-          payment_bank_name?: string | null
-          payment_momo_account_name?: string | null
-          payment_momo_network?: string | null
-          payment_momo_note?: string | null
-          payment_momo_number?: string | null
-          registered_name?: string | null
-          tin?: string | null
-          vat_number?: string | null
-        }
-        Update: {
-          accounts_email?: string | null
-          address?: string | null
-          company_email?: never
-          company_phone?: string | null
-          company_website?: string | null
-          effective_from?: string | null
-          invoice_payment_details?: string | null
-          invoice_terms_days?: number | null
-          payment_bank_account_name?: string | null
-          payment_bank_account_number?: string | null
-          payment_bank_branch?: string | null
-          payment_bank_name?: string | null
-          payment_momo_account_name?: string | null
-          payment_momo_network?: string | null
-          payment_momo_note?: string | null
-          payment_momo_number?: string | null
-          registered_name?: string | null
-          tin?: string | null
-          vat_number?: string | null
         }
         Relationships: []
       }
@@ -6035,13 +5703,6 @@ export type Database = {
             foreignKeyName: "invoices_job_id_fkey"
             columns: ["job_id"]
             isOneToOne: false
-            referencedRelation: "job_money_status"
-            referencedColumns: ["job_id"]
-          },
-          {
-            foreignKeyName: "invoices_job_id_fkey"
-            columns: ["job_id"]
-            isOneToOne: false
             referencedRelation: "jobs"
             referencedColumns: ["id"]
           },
@@ -6051,13 +5712,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "jobs_flagged"
             referencedColumns: ["job_id"]
-          },
-          {
-            foreignKeyName: "invoices_job_id_fkey"
-            columns: ["job_id"]
-            isOneToOne: false
-            referencedRelation: "my_jobs"
-            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "invoices_job_id_fkey"
@@ -6151,15 +5805,7 @@ export type Database = {
           supplier_id: string | null
           supplier_name: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "expenses_supplier_id_fkey"
-            columns: ["supplier_id"]
-            isOneToOne: false
-            referencedRelation: "suppliers"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       tax_credit_balances: {
         Row: {
@@ -6216,23 +5862,7 @@ export type Database = {
           charge_out_rate: number | null
           entry_id: string | null
         }
-        Insert: {
-          charge_out_rate?: number | null
-          entry_id?: string | null
-        }
-        Update: {
-          charge_out_rate?: number | null
-          entry_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "timesheet_rate_snapshots_entry_id_fkey"
-            columns: ["entry_id"]
-            isOneToOne: true
-            referencedRelation: "timesheet_entries"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       timesheet_custom_activities: {
         Row: {

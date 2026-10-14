@@ -271,13 +271,38 @@ It is modelled as Tier 3 (employee and employer), with a dated rate setting defa
 - **anon gets nothing in `public`.** It has no table, view, sequence or function, now or for objects created later (default privileges). Nothing in the app reads data before sign-in.
 - **`function_search_path_mutable`.** All 20 functions flagged now have `search_path = ''`. All of them already used schema-qualified names.
 - **Still on the Advisor, by design:**
-  - `security_definer_view` (25 views): A-029. Each view checks the role itself, and that's how they hide columns. anon can no longer select from them.
+  - `security_definer_view` (25 views): *cleared by D-057 (migration 2500).*
   - `authenticated_security_definer_function_executable`: the app's RPCs, each with its own role check.
   - `auth_leaked_password_protection`: a dashboard setting, available on Pro (D-055). Turn it on with the upgrade.
 - **Tests.**
   - `supabase/tests/99_test_security_advisor.sql`.
   - Acceptance section `acceptance/tests/08_emails_names.ts`. It checks that anon, Staff, NSP, Admin and the Project lead see no one else's email, that the lead sees team names on Timesheet approvals, Team and Leave, that Directors and the Accountant see staff names, and that the Owner still sees emails.
 - **Rollout.** Applied to staging on 14 Oct. Production gets migration 2400 with the next release, under D-053.
+
+### No SECURITY DEFINER views, 14 Oct 2026 (D-057)
+
+**D-057: Every view runs as the caller (migration 2500).** *Supersedes A-029.* The Security Advisor reported 25 `security_definer_view` errors. None are left: the error list is empty on staging.
+- **15 views use `security_invoker`,** so the RLS on the tables underneath applies:
+  - `account_balances`, `director_balances`, `invoices_to_chase`, `job_hours_vs_budget`, `job_milestone_check`, `jobs_flagged`, `leave_balances`, `payroll_cost_changes`, `receivables_ageing`, `retention_by_job`, `staff_loan_warnings`, `statutory_ledger`, `statutory_plans`, `tax_credit_balances`, `timesheet_custom_activities`.
+  - Each was checked role by role against the full local test data. Every role gets the same rows and values as before.
+- **10 views are backed by a role-checked function.** Each one shows some role rows or columns that its RLS can't read: `account_picker`, `company_profile`, `job_money_status`, `leave_calendar`, `my_jobs`, `ready_to_invoice`, `receipt_tasks`, `staff_loan_picker`, `supplier_bills_open`, `timesheet_charge_out`.
+  - The view's query moved, unchanged, into `app.<view>_rows()`. That function runs with owner rights, has `search_path = ''` and keeps the view's role check. The `app` schema isn't exposed through the API, and anon can't run these functions.
+  - The view keeps its name and columns and runs as the caller over the function, so the app doesn't change.
+  - The `ready_to_invoice` and `supplier_bills_open` checks look for invoices and payments that Admin's RLS hides. Under RLS they would silently give Admin wrong answers.
+- **A-019 enforced: Admin gets no totals.** Three views were returning per-job totals to Admin:
+  - `job_money_status`: invoiced, billed and settled per job.
+  - `retention_by_job`: retention held per job.
+  - `job_milestone_check`: milestone total against the fee.
+
+  Admin is now out of all three (the Owner's choice). "Retention held by clients" leaves Admin's menu, and Job detail hides its Money panel for Admin. Per-invoice and per-bill amounts are unchanged.
+- **SECURITY DEFINER functions.** All 21 in `public` were checked. Each one:
+  - has `search_path = ''`, and anon can't run it;
+  - checks the caller's role, so none needed a fix. Most check at the top and raise an error or return nothing. The others filter on the role in the query itself, so they return no rows to anyone else: `vat_workings`, `utilisation`, `timesheet_compliance`, `missing_timesheet_days`, `timesheet_activity_hours`, `working_days`, `user_directory`, and `month_close_blockers` (through `app.month_close_blockers_all`).
+  - These are the app's RPCs, so the 21 `authenticated_security_definer_function_executable` warnings stay by design.
+- **Tests.**
+  - `supabase/tests/99_test_invoker_views.sql`: every view runs as the caller. Admin and Staff get nothing from each money view and function. Finance actions are refused.
+  - Acceptance section `acceptance/tests/09_no_money.ts`: as Staff, NSP and Admin, through the API, every money and payroll view, table and function. The Owner reading the same sources is the control, so an empty answer means refused, not missing data.
+- **Rollout.** Applied to staging on 14 Oct. Production gets migrations 2400 and 2500 together with the next release (D-053).
 
 ---
 
@@ -372,7 +397,7 @@ These came up while building the schema. Each is easy to change if the Owner or 
 - Once Paid, a payment is locked apart from its review fields and attachments.
 - Cash leaves the ledger only when the payment is marked Paid.
 
-**A-029: Views run with owner rights.** Views don't use `security_invoker`; each checks the role itself. That's how they hide columns (for example `account_picker`, `my_jobs`, `leave_calendar`, `receipt_tasks`). The Supabase linter will flag these as "security definer views". That's expected. Since D-056, anon can't select from any of them.
+**A-029: Views run with owner rights.** *Superseded by D-057 (14 Oct 2026): every view now runs as the caller.* Views don't use `security_invoker`; each checks the role itself. That's how they hide columns (for example `account_picker`, `my_jobs`, `leave_calendar`, `receipt_tasks`). The Supabase linter will flag these as "security definer views". That's expected. Since D-056, anon can't select from any of them.
 
 **A-030: What blocks month close.**
 - Money entries that are unreviewed or queried.

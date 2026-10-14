@@ -82,10 +82,16 @@ select tests.login('owner@t');
 set role authenticated;
 update public.jobs set retention_release_date = app.today() + 365, retention_release_terms = '12 months after completion';
 reset role;
-select tests.login('admin@t');
+select tests.login('acct@t');
 set role authenticated;
 do $$ begin
   perform tests.eq((select retention_held from public.retention_by_job), 10500.00, '9: retention shows on the retention list');
+end $$;
+reset role;
+select tests.login('admin@t');
+set role authenticated;
+do $$ begin
+  perform tests.eq((select count(*)::int from public.retention_by_job), 0, '9: Admin gets no retention totals (A-019, D-057)');
 end $$;
 reset role;
 
